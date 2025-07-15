@@ -1,24 +1,16 @@
-// src/firebase.js
-
+// src/firebase.js - TƏHLÜKƏSİZ VƏ YAYIMLAMAQ ÜÇÜN HAZIR VERSİYA
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 
-// --- SİZİN KOPYALADIĞINIZ KODU BURAYA YAPIŞDIRIN ---
-// Yuxarıdakı təlimatın 4.4-cü addımında kopyaladığınız
-// firebaseConfig kodunu aşağıdakının yerinə yapışdırın.
 const firebaseConfig = {
-  apiKey: "AIzaSyDRVxL7bxkPRHR9z6QOARsYHClcot7_NCY",
-  authDomain: "mutda-monitorinq-sistemi.firebaseapp.com",
-  projectId: "mutda-monitorinq-sistemi",
-  storageBucket: "mutda-monitorinq-sistemi.firebasestorage.app",
-  messagingSenderId: "584760209094",
-  appId: "1:584760209094:web:7a073cda6a6608e744f1c7"
+  apiKey: import.meta.env.VITE_API_KEY,
+  authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_APP_ID
 };
-// ----------------------------------------------------
 
-
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Cloud Firestore and get a reference to the service
 export const db = getFirestore(app);
+
