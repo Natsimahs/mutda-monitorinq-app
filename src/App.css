@@ -1,10 +1,13 @@
-/* src/App.css - BÜTÜN TƏTBİQİN STİLLƏRİ */
+/* src/App.css - BÜTÜN TƏTBİQİN VAHİD STİL FAYLI */
 
-/* Global Styles */
+/* ==========================================================================
+   1. Global Stillər
+   ========================================================================== */
 body {
-  background-color: #f4f7f9;
-  font-family: 'Segoe UI', sans-serif;
+  background-color: #f0f2f5;
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
   margin: 0;
+  color: #333;
 }
 
 .loading-screen {
@@ -13,10 +16,36 @@ body {
   align-items: center;
   height: 100vh;
   font-size: 1.5rem;
-  color: #34495e;
+  color: #555;
+  font-weight: 500;
 }
 
-/* === Login Page Styles === */
+.main-app-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.back-button {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 50px;
+  cursor: pointer;
+  z-index: 1000;
+  transition: background-color 0.2s;
+}
+.back-button:hover {
+  background-color: rgba(0,0,0,0.8);
+}
+
+/* ==========================================================================
+   2. Login Səhifəsi
+   ========================================================================== */
 .login-container {
   display: flex;
   justify-content: center;
@@ -24,7 +53,6 @@ body {
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
-
 .login-box {
   background: white;
   padding: 3rem;
@@ -34,165 +62,91 @@ body {
   max-width: 400px;
   text-align: center;
 }
+.login-header h2 { margin-top: 0; color: #2c3e50; }
+.login-header p { color: #7f8c8d; margin-bottom: 2rem; }
+.input-group { text-align: left; margin-bottom: 1.5rem; }
+.input-group label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
+.input-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 1rem; }
+.login-button { width: 100%; padding: 15px; border: none; background: #3498db; color: white; font-size: 1.1rem; border-radius: 5px; cursor: pointer; transition: background-color 0.3s; }
+.login-button:hover { background: #2980b9; }
+.login-button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+.error-message { color: #e74c3c; margin-bottom: 1rem; }
 
-.login-header h2 {
-  margin-top: 0;
-  color: #2c3e50;
-}
 
-.login-header p {
-  color: #7f8c8d;
-  margin-bottom: 2rem;
-}
-
-.input-group {
-  text-align: left;
-  margin-bottom: 1.5rem;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 500;
-  color: #555;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 12px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  box-sizing: border-box;
-  font-size: 1rem;
-}
-
-.login-button {
-  width: 100%;
-  padding: 15px;
-  border: none;
-  background: #3498db;
-  color: white;
-  font-size: 1.1rem;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.login-button:hover {
-  background: #2980b9;
-}
-
-.login-button:disabled {
-  background-color: #bdc3c7;
-  cursor: not-allowed;
-}
-
-.error-message {
-  color: #e74c3c;
-  margin-bottom: 1rem;
-}
-
-/* === Dashboard Styles === */
-.dashboard-container {
-  padding: 2rem;
-}
-
+/* ==========================================================================
+   3. Dashboard (Ana Səhifə)
+   ========================================================================== */
 .dashboard-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
   margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #ddd;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
-
-.logout-button {
-  background-color: #e74c3c;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.module-selection h3 {
-  text-align: center;
-  font-weight: 500;
-  color: #34495e;
-}
+.header-content h1 { margin: 0; font-size: 1.8rem; color: #2c3e50; }
+.header-content .welcome-message { margin: 0.5rem 0 0 0; color: #7f8c8d; }
+.logout-button { background-color: #f1f3f5; color: #555; border: 1px solid #dee2e6; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.2s; }
+.logout-button:hover { background-color: #e9ecef; border-color: #ced4da; }
 
 .module-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
 }
-
 .module-card {
   background-color: #ffffff;
-  border-radius: 10px;
-  padding: 2rem;
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
+  border: 1px solid transparent;
 }
+.module-card:hover { transform: translateY(-5px); box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08); border-color: #e0e0e0; }
+.card-icon { flex-shrink: 0; width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.card-icon svg { width: 28px; height: 28px; color: white; }
+.card-icon.color-1 { background: linear-gradient(135deg, #56ab2f, #a8e063); }
+.card-icon.color-2 { background: linear-gradient(135deg, #6a82fb, #fc5c7d); }
+.card-icon.color-3 { background: linear-gradient(135deg, #ffc371, #ff5f6d); }
+.card-icon.color-4 { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+.card-icon.color-5 { background: linear-gradient(135deg, #f97794, #623aa2); }
+.card-icon.color-6 { background: linear-gradient(135deg, #00c6ff, #0072ff); }
+.card-text h4 { margin: 0 0 0.25rem 0; font-size: 1.1rem; color: #34495e; }
+.card-text p { margin: 0; font-size: 0.9rem; color: #7f8c8d; line-height: 1.4; }
+.module-card.disabled { background-color: #f8f9fa; cursor: not-allowed; opacity: 0.7; }
+.module-card.admin-card { border-left: 4px solid #f39c12; }
 
-.module-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-}
 
-.module-card.disabled {
-  background-color: #ecf0f1;
-  cursor: not-allowed;
-  opacity: 0.7;
+/* ==========================================================================
+   4. Ümumi Səhifə Stilləri (Form, Reports, Admin, Attendance)
+   ========================================================================== */
+.form-container, .reports-page-container, .admin-page-container, .attendance-page-container { 
+  padding: 2rem; 
+  background: white; 
+  border-radius: 12px; 
+  margin-top: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
-
-.module-card.disabled:hover {
-  transform: none;
-}
-
-.module-card h4 {
-  color: #3498db;
-}
-
-/* === Main App Styles (Back button etc.) === */
-.main-app-container {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.back-button {
-  position: fixed;
-  top: 20px;
-  left: 20px;
-  background-color: rgba(0,0,0,0.5);
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 50px;
-  cursor: pointer;
-  z-index: 1000;
-}
-
-/* Form stilləri (əvvəlki kimi qalır, sadəcə bura köçürülür) */
-/* MonitoringForm.css-dən olan bütün stilləri buranın altına əlavə edin */
-.form-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 2rem;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.08);
-}
-/* ... (əvvəlki sessiyadakı App.css-dən qalan bütün form stillərini bura yapışdırın) ... */
-.form-header { text-align: center; margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
-.form-header h1 { color: #2c3e50; font-size: 1.8rem; }
-.sticky-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 10px; background-color: #f8f9fa; border-radius: 5px; margin-top: 1rem; border: 1px solid #e9ecef; }
-.timer { font-size: 1rem; font-weight: 500; color: #e67e22; background-color: #fff; padding: 5px 10px; border-radius: 4px; }
-.location-info { font-size: 0.9rem; color: #34495e; text-align: right; }
+.form-header, .page-header { text-align: center; margin-bottom: 2rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+.form-header h1, .page-header h2 { color: #2c3e50; font-size: 1.8rem; }
+.sticky-header, .header-info-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 10px; background-color: #f8f9fa; border-radius: 5px; margin-top: 1rem; border: 1px solid #e9ecef; }
+.timer { font-size: 1rem; font-weight: 500; color: #e67e22; }
+.location-info { font-size: 0.9rem; color: #34495e; }
 fieldset { border: 1px solid #ddd; border-radius: 5px; padding: 1.5rem; margin-bottom: 2rem; }
 legend { padding: 0 10px; font-weight: 600; color: #34495e; }
+.action-button { display: inline-block; background-color: #3498db; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; text-decoration: none; }
+.action-button:hover { background-color: #2980b9; }
+
+
+/* ==========================================================================
+   5. Monitorinq Forması Stilləri
+   ========================================================================== */
 .numeric-inputs-container { display: flex; flex-direction: column; gap: 1rem; }
 .numeric-input-item { display: flex; align-items: center; justify-content: space-between; }
 .numeric-input-item label { margin-bottom: 0; flex-basis: 60%; }
@@ -201,9 +155,6 @@ legend { padding: 0 10px; font-weight: 600; color: #34495e; }
 .signature-inputs { display: flex; gap: 1rem; margin-bottom: 1rem; }
 .signature-canvas { border: 1px dashed #95a5a6; border-radius: 4px; cursor: crosshair; touch-action: none; }
 .clear-signature-button { padding: 8px 12px; background-color: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
-.action-button { display: inline-block; background-color: #3498db; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1rem; font-weight: 500; cursor: pointer; transition: background-color 0.2s; text-decoration: none; }
-.submit-button { width: 100%; }
-.new-form-button { background-color: #2ecc71; }
 .submission-success { text-align: center; }
 .submission-success h2 { color: #27ae60; }
 .submission-success .button-group { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; }
@@ -211,14 +162,99 @@ legend { padding: 0 10px; font-weight: 600; color: #34495e; }
 .question-label { font-weight: 600; color: #2c3e50; font-size: 1.1rem; }
 .radio-group { display: flex; gap: 2rem; margin: 1rem 0; }
 .note-input { min-height: 80px; resize: vertical; }
-/* src/App.css faylının sonuna əlavə olunacaq stillər */
 
-/* PDF Hesabatının Stili (Ekran üçün Gizlədilib) */
+
+/* ==========================================================================
+   6. Hesabat Səhifələri Stilləri
+   ========================================================================== */
+.filters-container { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.5rem; background-color: #ecf0f1; border-radius: 8px; margin-bottom: 2rem; }
+.search-input { flex-grow: 1; min-width: 250px; padding: 12px; border: 1px solid #bdc3c7; border-radius: 5px; }
+.date-filters { display: flex; align-items: center; gap: 0.5rem; }
+.date-filters input[type="date"] { padding: 10px; border: 1px solid #bdc3c7; border-radius: 5px; }
+.export-button { background-color: #16a085; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; }
+.table-container { overflow-x: auto; }
+.reports-table { width: 100%; border-collapse: collapse; background-color: white; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07); }
+.reports-table th, .reports-table td { padding: 15px; text-align: left; border-bottom: 1px solid #ecf0f1; white-space: nowrap; }
+.reports-table th { background-color: #34495e; color: white; font-weight: 600; }
+.reports-table tbody tr:hover { background-color: #f8f9fa; }
+.reports-table td[colspan="5"], .reports-table td[colspan="8"], .reports-table td[colspan="11"] { text-align: center; padding: 2rem; color: #7f8c8d; }
+.details-button { background-color: #3498db; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+
+
+/* ==========================================================================
+   7. Admin Paneli Stilləri
+   ========================================================================== */
+.admin-tabs { display: flex; justify-content: center; margin-bottom: 2rem; border-bottom: 2px solid #ecf0f1; }
+.admin-tab-button { padding: 1rem 2rem; border: none; background: none; font-size: 1.1rem; font-weight: 500; cursor: pointer; color: #7f8c8d; position: relative; transition: color 0.3s; }
+.admin-tab-button.active { color: #3498db; }
+.admin-tab-button.active::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background-color: #3498db; }
+.management-container { background-color: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+.management-container h3 { margin-top: 0; color: #34495e; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+.management-form { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+.management-form input, .management-form select { flex-grow: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; }
+.management-form .form-buttons { display: flex; gap: 1rem; width: 100%; }
+.management-form button { padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; background-color: #2ecc71; color: white; font-weight: 500; }
+.management-form button[type="button"] { background-color: #95a5a6; }
+.management-table { width: 100%; border-collapse: collapse; }
+.management-table th, .management-table td { padding: 12px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+.management-table th { background-color: #f8f9fa; }
+.management-table .action-buttons button { margin-right: 0.5rem; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; background-color: #3498db; color: white; }
+.management-table .action-buttons button.delete { background-color: #e74c3c; }
+.import-container { background-color: #fdfaf6; border: 1px solid #f39c12; border-radius: 8px; padding: 1.5rem; margin-bottom: 2rem; }
+.import-container h4 { margin-top: 0; color: #d35400; }
+.import-container p { color: #7f8c8d; font-size: 0.9rem; }
+.import-container input[type="file"] { display: block; margin-top: 1rem; border: 1px solid #ccc; padding: 10px; border-radius: 5px; }
+
+
+/* ==========================================================================
+   8. Davamiyyət Səhifəsi Stilləri
+   ========================================================================== */
+.selection-panel { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; }
+.selection-panel select { padding: 12px; min-width: 250px; font-size: 1rem; border-radius: 5px; border: 1px solid #ccc; }
+.stats-panel { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+.stat-card { background-color: #fff; padding: 1.5rem; border-radius: 8px; text-align: center; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); }
+.stat-card h4 { margin: 0 0 0.5rem 0; color: #3498db; }
+.stat-card p { margin: 0; font-size: 2rem; font-weight: 600; color: #34495e; }
+.table-section { background-color: #fff; padding: 2rem; border-radius: 8px; }
+.table-filters { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
+.table-filters select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; }
+.attendance-table { width: 100%; border-collapse: collapse; }
+.attendance-table th, .attendance-table td { padding: 15px; text-align: left; border-bottom: 1px solid #ecf0f1; }
+.attendance-table th { background-color: #f8f9fa; }
+.attendance-table td[colspan="4"] { text-align: center; color: #7f8c8d; padding: 2rem; }
+.submission-section { margin-top: 2rem; text-align: right; }
+.status-select { padding: 5px 8px; border-radius: 5px; border: 1px solid #ccc; font-weight: bold; width: 100%; }
+.status-seçilməyib { background-color: #f2f2f2; color: #555; border-color: #ccc; }
+.status-gəlib { background-color: #e8f5e9; color: #2e7d32; border-color: #a5d6a7; }
+.status-gəlməyib { background-color: #ffebee; color: #c62828; border-color: #ef9a9a; }
+.status-üzrlü { background-color: #fff3e0; color: #ef6c00; border-color: #ffcc80; }
+.unvalidated-row { background-color: #ffebee !important; }
+.stat-card.qida-card { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.stat-card.qida-card h4 { margin-bottom: 1rem; }
+.stat-card.qida-card input[type="number"] { width: 80%; padding: 10px; text-align: center; font-size: 1.5rem; border: 1px solid #ccc; border-radius: 5px; margin-bottom: 1rem; }
+.stat-card.qida-card .kenarlasma { font-size: 1rem; font-weight: bold; color: #27ae60; }
+.stat-card.qida-card .kenarlasma.ferqli { color: #e74c3c; }
+
+
+/* ==========================================================================
+   9. İstifadəçi İdarəetmə və Rol Stilləri
+   ========================================================================== */
+.role-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; color: white; text-transform: capitalize; }
+.role-admin { background-color: #e74c3c; }
+.role-subadmin { background-color: #f39c12; }
+.role-istifadəçi { background-color: #3498db; }
+.role-select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; }
+.reports-table .kenarlasma-ferqli { color: #e74c3c; font-weight: bold; }
+
+
+/* ==========================================================================
+   10. PDF Hesabat Stilləri (Gizli)
+   ========================================================================== */
 .pdf-report-container {
   position: absolute;
-  left: -9999px; /* Ekranda görünməməsi üçün */
+  left: -9999px;
   top: auto;
-  width: 210mm; /* A4 ölçüsü */
+  width: 210mm;
   min-height: 297mm;
   padding: 20mm;
   background-color: white;
@@ -226,292 +262,14 @@ legend { padding: 0 10px; font-weight: 600; color: #34495e; }
   font-family: 'Times New Roman', Times, serif;
   box-sizing: border-box;
 }
-
-.pdf-header {
-  text-align: center;
-  margin-bottom: 20px;
-  border-bottom: 2px solid #000;
-  padding-bottom: 10px;
-}
-
-.pdf-header h1 {
-  font-size: 18pt;
-  margin: 0;
-}
-
-.pdf-section {
-  margin-bottom: 15px;
-}
-
-.pdf-section h2 {
-  font-size: 14pt;
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 5px;
-  margin-bottom: 10px;
-}
-
-.pdf-section p {
-  font-size: 12pt;
-  line-height: 1.5;
-  margin: 5px 0;
-}
-
-.pdf-question {
-  margin-bottom: 10px;
-}
-
-.pdf-note {
-  font-style: italic;
-  color: #555;
-  padding-left: 20px;
-  border-left: 2px solid #eee;
-}
-
-.pdf-signatures-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-}
-
-.pdf-signature-item {
-    border: 1px solid #ccc;
-    padding: 10px;
-    text-align: center;
-}
-
-.pdf-signature-item p {
-    margin: 2px 0;
-}
-
-.pdf-signature-img {
-    max-width: 150px;
-    height: auto;
-    margin-top: 10px;
-}
-/* src/App.css faylının sonuna əlavə olunacaq stillər */
-
-/* === Reports Page Styles === */
-.reports-page-container {
-  padding: 2rem;
-}
-
-.reports-page-container h2 {
-  text-align: center;
-  color: #2c3e50;
-  margin-bottom: 2rem;
-}
-
-.filters-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background-color: #ecf0f1;
-  border-radius: 8px;
-  margin-bottom: 2rem;
-}
-
-.search-input {
-  flex-grow: 1;
-  min-width: 250px;
-  padding: 12px;
-  border: 1px solid #bdc3c7;
-  border-radius: 5px;
-}
-
-.date-filters {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.date-filters input[type="date"] {
-  padding: 10px;
-  border: 1px solid #bdc3c7;
-  border-radius: 5px;
-}
-
-.export-button {
-  background-color: #16a085;
-  color: white;
-  padding: 12px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 500;
-}
-.export-button:hover {
-  background-color: #1abc9c;
-}
-
-.table-container {
-  overflow-x: auto; /* Kiçik ekranlarda cədvəlin sürüşdürülməsi üçün */
-}
-
-.reports-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: white;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
-}
-
-.reports-table th, .reports-table td {
-  padding: 15px;
-  text-align: left;
-  border-bottom: 1px solid #ecf0f1;
-}
-
-.reports-table th {
-  background-color: #34495e;
-  color: white;
-  font-weight: 600;
-}
-
-.reports-table tbody tr:hover {
-  background-color: #f8f9fa;
-}
-
-.reports-table td {
-  color: #555;
-}
-
-.reports-table td[colspan="5"] {
-  text-align: center;
-  padding: 2rem;
-  color: #7f8c8d;
-}
-
-.details-button {
-  background-color: #3498db;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-/* src/App.css faylının sonuna əlavə olunacaq stillər */
-
-/* === Modal (Detailed Report View) Styles === */
-.modal-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 2rem;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 900px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-}
-
-.modal-header h3 {
-  margin: 0;
-  color: #2c3e50;
-}
-
-.modal-close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  color: #95a5a6;
-}
-
-.modal-section {
-  margin-bottom: 1.5rem;
-}
-
-.modal-section h4 {
-  color: #3498db;
-  border-bottom: 1px solid #ecf0f1;
-  padding-bottom: 5px;
-}
-
-.modal-question {
-  margin-bottom: 10px;
-  padding-left: 1rem;
-}
-.modal-question .answer-Bəli { color: #27ae60; font-weight: bold; }
-.modal-question .answer-Xeyr { color: #c0392b; font-weight: bold; }
-.modal-question .answer-Qismən { color: #f39c12; font-weight: bold; }
-
-.modal-note {
-  font-style: italic;
-  color: #555;
-  padding-left: 1rem;
-  border-left: 3px solid #f1c40f;
-  background-color: #fef9e7;
-  padding: 10px;
-  margin-top: 5px;
-}
-
-.modal-signatures-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.modal-signature-item {
-  border: 1px solid #ddd;
-  padding: 1rem;
-  text-align: center;
-}
-.modal-signature-item img {
-  max-width: 100%;
-  height: auto;
-  border: 1px solid #eee;
-}
-
-/* === Table Style Improvements === */
-.reports-table th, .reports-table td {
-  white-space: nowrap; /* Cədvəl xanalarının qırılmasının qarşısını alır */
-}
-/* src/App.css faylının sonuna əlavə olunacaq stillər */
-
-/* === Admin Page Styles === */
-.admin-page-container {
-  padding: 2rem;
-  text-align: center;
-}
-
-/* === Dashboard Header User Info === */
-.header-user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.header-user-info span {
-  font-weight: 500;
-  color: #555;
-}
-
-.module-card.admin-card {
-  border: 2px solid #e67e22;
-}
-
-.module-card.admin-card h4 {
-  color: #e67e22;
-}
+.pdf-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+.pdf-header h1 { font-size: 18pt; margin: 0; }
+.pdf-section { margin-bottom: 15px; }
+.pdf-section h2 { font-size: 14pt; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
+.pdf-section p { font-size: 12pt; line-height: 1.5; margin: 5px 0; }
+.pdf-question { margin-bottom: 10px; }
+.pdf-note { font-style: italic; color: #555; padding-left: 20px; border-left: 2px solid #eee; }
+.pdf-signatures-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.pdf-signature-item { border: 1px solid #ccc; padding: 10px; text-align: center; }
+.pdf-signature-item p { margin: 2px 0; }
+.pdf-signature-img { max-width: 150px; height: auto; margin-top: 10px; }
