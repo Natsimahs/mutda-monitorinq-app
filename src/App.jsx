@@ -48,7 +48,26 @@ const App = () => {
     sessionStorage.setItem('currentPage', currentPage);
   }, [currentPage]);
 
-  const handleLogout = async () => { /* ... */ };
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      
+      // İstəyə görə əlavə təmizlik işləri
+      sessionStorage.removeItem('currentPage');
+      localStorage.removeItem('newMonitoringFormDraft');
+      
+      // State-i sıfırla
+      setUser(null);
+      setCurrentPage('dashboard');
+      
+      console.log('İstifadəçi uğurla çıxış etdi');
+    } catch (error) {
+      console.error('Çıxış zamanı xəta:', error);
+      alert('Çıxış zamanı xəta baş verdi. Zəhmət olmasa yenidən cəhd edin.');
+    }
+  };
+
   const handleNavigate = (page) => setCurrentPage(page);
 
   if (loading) return <div className="loading-screen">Yüklənir...</div>;

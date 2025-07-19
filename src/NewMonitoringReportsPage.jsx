@@ -7,6 +7,7 @@ import NewMonitoringDetailModal from './NewMonitoringDetailModal.jsx';
 import AktPDFModal from './AktPDFModal.jsx';
 import monitoringQuestions from './monitoringQuestions';
 import { useFilteredReports } from './hooks/useFilteredReports';
+import MapModal from './MapModal.jsx';
 
 function getRiskLevel(report) {
   const count = report.answers?.filter(a => a === "Xeyr").length || 0;
@@ -27,7 +28,6 @@ const NewMonitoringReportsPage = () => {
   const [sortConfig, setSortConfig] = useState({ key: 'gonderilmeTarixi', direction: 'descending' });
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedReportForAkt, setSelectedReportForAkt] = useState(null);
-
   // Yeni filtrləmə və axtarış state-ləri
   const [searchTerm, setSearchTerm] = useState("");
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
@@ -35,6 +35,8 @@ const NewMonitoringReportsPage = () => {
   const [visibleColumns, setVisibleColumns] = useState([
     "Tarix", "Saat", "Risk", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF"
   ]);
+  // Xəritə modalı üçün state
+  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,13 +84,41 @@ const NewMonitoringReportsPage = () => {
   // Əlavə filtrləmə və search (custom hook ilə)
   const filteredReports = useFilteredReports(filteredByDateAndRayon, searchTerm, showCriticalOnly);
 
-  // Pagination
+  // --- STATİSTİKA HESABLARI ---
+  // 1. Ümumi monitorinq sayı (filtrə uyğun)
+  const totalCount = filteredReports.length;
+
+  // 2. Rayonlar üzrə monitorinq sayı (obyekt: rayon -> say)
+  const rayonCountObj = {};
+  filteredReports.forEach(r => {
+    if (!rayonCountObj[r.rayon]) rayonCountObj[r.rayon] = 0;
+    rayonCountObj[r.rayon]++;
+  });
+
+  // 3. Ən çox "Xeyr" verilən sual (filtrə uyğun)
+  const questionNoCounts = Array(monitoringQuestions.length).fill(0);
+  filteredReports.forEach(r => {
+    (r.answers || []).forEach((ans, i) => {
+      if(ans === "Xeyr") questionNoCounts[i]++;
+    });
+  });
+  const maxNoCount = Math.max(...questionNoCounts);
+  const maxNoIndex = questionNoCounts.findIndex(v => v === maxNoCount);
+  const maxNoQuestion = maxNoCount > 0 ? monitoringQuestions[maxNoIndex] : "-";
+
+  // --- Qalan kodlar dəyişmir! ---
+  const gpsList = filteredReports
+    .filter(r => r.gps && r.gps.lat && r.gps.lon)
+    .map(r => ({
+      lat: r.gps.lat,
+      lon: r.gps.lon,
+      title: getKindergartenNameById(r.bagcaId),
+      id: r.id,
+    }));
   const paginatedReports = filteredReports.slice(
     (currentPage - 1) * pageSize, currentPage * pageSize
   );
   const totalPages = Math.ceil(filteredReports.length / pageSize);
-
-  // Dinamik sütunlar
   const columns = [
     { key: "Tarix", title: "Tarix" },
     { key: "Saat", title: "Saat" },
@@ -107,7 +137,6 @@ const NewMonitoringReportsPage = () => {
         : [...prev, columnKey]
     );
   }
-
   const requestSort = (key) => {
     let direction = 'ascending';
     if (sortConfig.key === key && sortConfig.direction === 'ascending') {
@@ -115,16 +144,12 @@ const NewMonitoringReportsPage = () => {
     }
     setSortConfig({ key, direction });
   };
-
   const getSortArrow = (key) => {
       if (sortConfig.key !== key) return '↕';
       return sortConfig.direction === 'ascending' ? '▲' : '▼';
   }
-
   const rayonlar = [...new Set(kindergartens.map(kg => kg.rayon))];
   if (loading) return <div className="loading-screen">Hesabatlar yüklənir...</div>;
-
-  // Excel ixracı əvvəlki kimi saxlanılır
   const handleExportToExcel = (dataToExport, fileName) => {
     if (dataToExport.length === 0) {
         alert("İxrac etmək üçün məlumat yoxdur.");
@@ -162,6 +187,25 @@ const NewMonitoringReportsPage = () => {
     <>
       <div className="reports-page-container">
         <h2>MTM üzrə Monitorinq Hesabatları</h2>
+        {/* --- STATISTIKA PANELI BURADA --- */}
+      <div className="stats-panel">
+  <div className="stat-card">
+    <div className="stat-label">Ümumi Monitorinq</div>
+    <div className="stat-value">{totalCount}</div>
+    <div className="stat-hint">Seçilmiş dövrdə</div>
+  </div>
+  <div className="stat-card">
+    <div className="stat-label">Ən çox “Xeyr” cavabı verilən sual</div>
+    <div className="stat-value" style={{fontSize:'1.04em', fontWeight:600}}>
+      {maxNoQuestion !== "-" ? maxNoQuestion : <span style={{fontWeight:400}}>Sual yoxdur</span>}
+    </div>
+    <div className="stat-hint">
+      {maxNoQuestion !== "-" ? `"Xeyr" cavabının sayı: ${maxNoCount}` : ""}
+    </div>
+  </div>
+</div>
+        {/* --- STATISTIKA PANELI SON --- */}
+
         {/* Filtrlər və yeni UI */}
         <div className="filters-container">
           <div className="date-filters"><label>Başlanğıc Tarix:</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
@@ -194,6 +238,9 @@ const NewMonitoringReportsPage = () => {
             </button>
             <button onClick={() => handleExportToExcel(allReports, 'Umumi_Hesabat')} className="export-button general-export">
               Ümumi Excel
+            </button>
+            <button onClick={() => setMapOpen(true)} className="export-button" style={{background:'#38bdf8', color:'#fff'}}>
+              Xəritədə Bax
             </button>
           </div>
         </div>
@@ -270,6 +317,10 @@ const NewMonitoringReportsPage = () => {
           kindergartenName={getKindergartenNameById(selectedReportForAkt.bagcaId)}
           onClose={() => setSelectedReportForAkt(null)}
         />
+
+      )}
+      {mapOpen && (
+        <MapModal gpsList={gpsList} onClose={() => setMapOpen(false)} />
       )}
     </>
   );

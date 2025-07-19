@@ -1,20 +1,28 @@
-// src/SignaturePad.jsx
+import React, { useRef, useEffect, useState } from 'react';
 
-import React, { useRef, useEffect } from 'react';
-
-const SignaturePad = ({ onSignatureEnd }) => {
+const SignaturePad = ({ onSignatureEnd, width = 400, height = 150 }) => {
   const canvasRef = useRef(null);
   const isDrawing = useRef(false);
   const lastPos = useRef({ x: 0, y: 0 });
+  const [hasSignature, setHasSignature] = useState(false);
+  const [strokeColor, setStrokeColor] = useState('#222');
+  const [lineWidth, setLineWidth] = useState(2.5);
 
+  // Canvas ölçüsünü dinamik, retina dəstəyi ilə
   useEffect(() => {
     const canvas = canvasRef.current;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    canvas.style.width = width + 'px';
+    canvas.style.height = height + 'px';
     const ctx = canvas.getContext('2d');
-    ctx.strokeStyle = '#000';
-    ctx.lineWidth = 2;
+    ctx.scale(dpr, dpr);
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-  }, []);
+  }, [width, height, strokeColor, lineWidth]);
 
   const getPos = (e) => {
     const rect = canvasRef.current.getBoundingClientRect();
@@ -28,14 +36,16 @@ const SignaturePad = ({ onSignatureEnd }) => {
   const startDrawing = (e) => {
     isDrawing.current = true;
     lastPos.current = getPos(e);
+    setHasSignature(true);
   };
 
   const draw = (e) => {
     if (!isDrawing.current) return;
-    e.preventDefault(); // Prevent scrolling on touch devices
-
+    e.preventDefault();
     const pos = getPos(e);
     const ctx = canvasRef.current.getContext('2d');
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = lineWidth;
     ctx.beginPath();
     ctx.moveTo(lastPos.current.x, lastPos.current.y);
     ctx.lineTo(pos.x, pos.y);
@@ -46,7 +56,6 @@ const SignaturePad = ({ onSignatureEnd }) => {
   const stopDrawing = () => {
     if (!isDrawing.current) return;
     isDrawing.current = false;
-    // Pass the signature data URL when drawing ends
     if (onSignatureEnd) {
       onSignatureEnd(canvasRef.current.toDataURL());
     }
@@ -56,17 +65,31 @@ const SignaturePad = ({ onSignatureEnd }) => {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    setHasSignature(false);
     if (onSignatureEnd) {
-      onSignatureEnd(null); // Clear signature data
+      onSignatureEnd(null);
     }
   };
 
   return (
     <div className="signature-pad-container">
+      <div className="signature-toolbar">
+        <label>
+          Rəng:
+          <input type="color" value={strokeColor} onChange={e => setStrokeColor(e.target.value)} />
+        </label>
+        <label>
+          Qələm qalınlığı:
+          <input type="range" min={1} max={7} step={0.5} value={lineWidth} onChange={e => setLineWidth(Number(e.target.value))} />
+        </label>
+        <button type="button" onClick={clearCanvas} className="clear-signature-button" disabled={!hasSignature}>
+          Təmizlə
+        </button>
+      </div>
       <canvas
         ref={canvasRef}
-        width={400}
-        height={150}
+        width={width}
+        height={height}
         className="signature-canvas"
         onMouseDown={startDrawing}
         onMouseMove={draw}
@@ -76,9 +99,6 @@ const SignaturePad = ({ onSignatureEnd }) => {
         onTouchMove={draw}
         onTouchEnd={stopDrawing}
       ></canvas>
-      <button type="button" onClick={clearCanvas} className="clear-signature-button">
-        Təmizlə
-      </button>
     </div>
   );
 };

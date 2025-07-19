@@ -518,3 +518,141 @@ legend { padding: 0 10px; font-weight: 600; color: #34495e; }
   margin-right: 2px;
   margin-left: 2px;
 }
+/* xəritə modalı üçün əlavə görünüş */
+.modal-overlay {
+  position: fixed; left: 0; top: 0; width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.23); z-index: 1111; display: flex; align-items: center; justify-content: center;
+}
+.modal-content {
+  background: #fff; border-radius: 16px; box-shadow: 0 2px 14px rgba(0,0,0,0.14);
+  padding: 12px; position: relative; max-height: 94vh;
+}
+/* Daha modern, AirTable/Paper-style, kölgəli, radiuslu statistika paneli */
+.stats-panel {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  margin-bottom: 18px;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.stat-card {
+  flex: 1 1 160px;
+  min-width: 170px;
+  max-width: 310px;
+  background: #fcfdff;
+  border-radius: 16px;
+  box-shadow: 0 2.5px 8px rgba(16,122,255,.08);
+  padding: 13px 19px 11px 19px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  font-size: 1em;
+  transition: box-shadow .18s, transform .16s;
+  margin: 0;
+  border: 1px solid #f3f5fa;
+}
+.stat-card:hover {
+  box-shadow: 0 6px 24px rgba(30,144,255,.10);
+  transform: translateY(-2px) scale(1.015);
+}
+.stat-label {
+  color: #5c657a;
+  font-size: 1.01em;
+  font-weight: 600;
+  margin-bottom: 5px;
+  letter-spacing: 0.01em;
+}
+.stat-value {
+  color: #21242b;
+  font-size: 1.8em;
+  font-weight: 700;
+  margin-bottom: 4px;
+  word-break: break-word;
+  line-height: 1.13;
+}
+.stat-value .rayon-row {
+  font-size: 1em;
+  font-weight: 600;
+  color: #25315d;
+  margin-bottom: 2px;
+  display: block;
+}
+.stat-hint {
+  color: #a5adb8;
+  font-size: .97em;
+  font-weight: 400;
+  margin-top: 1px;
+}
+@media (max-width: 900px) {
+  .stats-panel {
+    gap: 8px;
+  }
+  .stat-card {
+    min-width: 115px;
+    padding: 7px 6px 6px 7px;
+    font-size: 0.95em;
+  }
+}
+@media (max-width: 700px) {
+  .stats-panel {
+    flex-direction: column;
+    gap: 7px;
+  }
+  .stat-card {
+    min-width: unset;
+    padding: 7px 6px 7px 7px;
+    font-size: 0.96em;
+  }
+}
+.signature-pad-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+}
+.signature-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+}
+.signature-toolbar label {
+  font-size: 1em;
+  color: #545868;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.signature-canvas {
+  border: 1.5px solid #c4d5e2;
+  border-radius: 10px;
+  box-shadow: 0 1px 8px rgba(140,190,255,0.11);
+  background: #fff;
+  width: 100%;
+  max-width: 400px;
+  min-height: 130px;
+  touch-action: none;
+}
+.clear-signature-button {
+  background: #ec5766;
+  color: #fff;
+  border: none;
+  padding: 6px 13px;
+  border-radius: 6px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background .15s;
+}
+.clear-signature-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.clear-signature-button:not(:disabled):hover {
+  background: #c94054;
+}
