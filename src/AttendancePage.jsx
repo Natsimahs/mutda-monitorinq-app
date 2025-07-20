@@ -104,7 +104,15 @@ const AttendancePage = ({ user }) => {
       return;
     }
     setIsLoading(true);
-    
+
+    // --- ƏSAS DƏYİŞİKLİK BURADA ---
+    const authorEmail = user?.email || "";
+    if (!authorEmail) {
+      alert("İstifadəçi email tapılmadı! Girişdən çıxıb yenidən login edin.");
+      setIsLoading(false);
+      return;
+    }
+    // -----------------------------
     // 1. Statistika obyektinin açarlarını təmizləyək (sanitize)
     const sanitizedByGroupStats = {};
     for (const key in stats.byGroup) {
@@ -121,10 +129,10 @@ const AttendancePage = ({ user }) => {
       bagcaId: pageState.selectedBagcaId,
       rayon: pageState.selectedRayon,
       authorId: user.uid,
-      authorEmail: user.email,
+      authorEmail,
       sifarisEdilenQida: parseInt(pageState.qidaSayi, 10) || 0,
       davamiyyetQeydleri: pageState.attendanceData,
-      statistika: sanitizedStats, // Təmizlənmiş statistikanı istifadə edirik
+      statistika: sanitizedStats,
     };
 
     // 3. Firebase-ə göndərək
@@ -141,7 +149,7 @@ const AttendancePage = ({ user }) => {
       setIsLoading(false);
     }
   };
-  
+
   const rayonlar = useMemo(() => [...new Set(allKindergartens.map(kg => kg.rayon))], [allKindergartens]);
   const bagcalarInRayon = useMemo(() => allKindergartens.filter(kg => kg.rayon === pageState.selectedRayon), [pageState.selectedRayon, allKindergartens]);
   const groupsInKg = useMemo(() => [...new Set(childrenInKg.map(c => c.qrupAdi))], [childrenInKg]);

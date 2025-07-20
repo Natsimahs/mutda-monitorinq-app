@@ -28,10 +28,12 @@ const App = () => {
       if (firebaseUser) {
         const userDocRef = doc(db, "users", firebaseUser.uid);
         const userDocSnap = await getDoc(userDocRef);
+        // DƏYİŞİKLİK: hər iki halda email prioritet auth-dan gəlməlidir!
+        const primaryEmail = firebaseUser.email || userDocSnap.data()?.email || "";
         if (userDocSnap.exists()) {
-          setUser({ ...firebaseUser, role: userDocSnap.data().role, email: userDocSnap.data().email });
+          setUser({ ...firebaseUser, role: userDocSnap.data().role, email: primaryEmail });
         } else {
-          const newUserRole = { role: 'istifadəçi', email: firebaseUser.email };
+          const newUserRole = { role: 'istifadəçi', email: primaryEmail };
           await setDoc(userDocRef, newUserRole);
           setUser({ ...firebaseUser, ...newUserRole });
         }
@@ -52,15 +54,10 @@ const App = () => {
     try {
       const auth = getAuth();
       await signOut(auth);
-      
-      // İstəyə görə əlavə təmizlik işləri
       sessionStorage.removeItem('currentPage');
       localStorage.removeItem('newMonitoringFormDraft');
-      
-      // State-i sıfırla
       setUser(null);
       setCurrentPage('dashboard');
-      
       console.log('İstifadəçi uğurla çıxış etdi');
     } catch (error) {
       console.error('Çıxış zamanı xəta:', error);
