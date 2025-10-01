@@ -25,24 +25,42 @@ const App = () => {
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (firebaseUser) {
-        const userDocRef = doc(db, "users", firebaseUser.uid);
-        const userDocSnap = await getDoc(userDocRef);
-        // DƏYİŞİKLİK: hər iki halda email prioritet auth-dan gəlməlidir!
-        const primaryEmail = firebaseUser.email || userDocSnap.data()?.email || "";
-        if (userDocSnap.exists()) {
-          setUser({ ...firebaseUser, role: userDocSnap.data().role, email: primaryEmail });
+      try {
+        if (firebaseUser) {
+          const userDocRef = doc(db, "users", firebaseUser.uid);
+
+          // Email hər zaman AUTH-dan prioritetdir; Firestore yalnız ehtiyatdır.
+          const primaryEmail = firebaseUser.email || "";
+
+          try {
+            const userDocSnap = await getDoc(userDocRef);
+
+            if (userDocSnap.exists()) {
+              const role = userDocSnap.data()?.role || 'istifadəçi';
+              const emailFromDb = userDocSnap.data()?.email || "";
+              const finalEmail = primaryEmail || emailFromDb || "";
+
+              setUser({ ...firebaseUser, role, email: finalEmail });
+            } else {
+              // İlk giriş – Firestore-da user sənədi yoxdur, yaradırıq
+              const newUserRole = { role: 'istifadəçi', email: primaryEmail };
+              await setDoc(userDocRef, newUserRole);
+              setUser({ ...firebaseUser, ...newUserRole });
+            }
+          } catch (err) {
+            // Firestore oxunmadısa belə, app ilişməsin – default rol ilə davam edək
+            console.warn("users/{uid} oxunarkən xəta oldu, default rol tətbiq edildi:", err);
+            setUser({ ...firebaseUser, role: 'istifadəçi', email: primaryEmail });
+          }
         } else {
-          const newUserRole = { role: 'istifadəçi', email: primaryEmail };
-          await setDoc(userDocRef, newUserRole);
-          setUser({ ...firebaseUser, ...newUserRole });
+          setUser(null);
+          setCurrentPage('dashboard');
         }
-      } else {
-        setUser(null);
-        setCurrentPage('dashboard');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -72,21 +90,41 @@ const App = () => {
 
   const renderPage = () => {
     switch (currentPage) {
-      case 'form': return <MonitoringForm />;
-      case 'new-monitoring': return <NewMonitoringForm />;
-      case 'reports': return <NewMonitoringReportsPage />;
-      case 'new-monitoring-reports': return <NewMonitoringReportsPage />;
-      case 'admin': return user.role === 'admin' ? <AdminManagementPage /> : <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
-      case 'settings': return user.role === 'admin' ? <UserManagementPage /> : <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
-      case 'attendance': return <AttendancePage user={user} />;
-      case 'attendance-reports': return <AttendanceReportsPage />;
-      case 'dashboard': default: return <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
+      case 'form':
+        return <MonitoringForm />;
+      case 'new-monitoring':
+        // user prop-u ötürülür (authorEmail/authorId üçün lazımdır)
+        return <NewMonitoringForm user={user} />;
+      case 'reports':
+        // user prop-u ötürülür (admin deyilsə yalnız öz hesabatlarını göstərmək üçün)
+        return <NewMonitoringReportsPage user={user} />;
+      case 'new-monitoring-reports':
+        return <NewMonitoringReportsPage user={user} />;
+      case 'admin':
+        return user.role === 'admin'
+          ? <AdminManagementPage />
+          : <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
+      case 'settings':
+        return user.role === 'admin'
+          ? <UserManagementPage />
+          : <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
+      case 'attendance':
+        return <AttendancePage user={user} />;
+      case 'attendance-reports':
+        return <AttendanceReportsPage />;
+      case 'dashboard':
+      default:
+        return <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
     }
   };
 
   return (
     <div className="main-app-container">
-      {currentPage !== 'dashboard' && (<button onClick={() => handleNavigate('dashboard')} className="back-button">&larr; Əsas Səhifəyə</button>)}
+      {currentPage !== 'dashboard' && (
+        <button onClick={() => handleNavigate('dashboard')} className="back-button">
+          &larr; Əsas Səhifəyə
+        </button>
+      )}
       {renderPage()}
     </div>
   );

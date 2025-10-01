@@ -1,6 +1,6 @@
 // src/NewMonitoringReportsPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from './firebase';
 import * as XLSX from 'xlsx';
 import NewMonitoringDetailModal from './NewMonitoringDetailModal.jsx';
@@ -18,7 +18,7 @@ function getRiskLevel(report) {
 
 const pageSize = 20;
 
-const NewMonitoringReportsPage = () => {
+const NewMonitoringReportsPage = ({ user }) => {
   const [allReports, setAllReports] = useState([]);
   const [kindergartens, setKindergartens] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -42,17 +42,44 @@ const NewMonitoringReportsPage = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
+        // Bağçalar
         const kgSnapshot = await getDocs(collection(db, "bagcalar"));
         setKindergartens(kgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        const reportSnapshot = await getDocs(collection(db, "newMonitorinqHesabatlari"));
-        setAllReports(reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // Reportlar: admin hamısını, digəri yalnız öz yazdıqlarını görür
+        const reportsCol = collection(db, "newMonitorinqHesabatlari");
+
+        if (user?.role === 'admin') {
+          const reportSnapshot = await getDocs(reportsCol);
+          setAllReports(reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } else {
+          // Fərqli dövrlərdə fərqli sahələr istifadə oluna bildiyi üçün bir neçə sorğunu birləşdiririk
+          const uid = user?.uid || '';
+          const emailRaw = (user?.email || '').trim();
+          const emailLower = emailRaw.toLowerCase();
+
+          const queries = [];
+          if (uid) queries.push(getDocs(query(reportsCol, where('authorId', '==', uid))));
+          if (emailRaw) queries.push(getDocs(query(reportsCol, where('authorEmail', '==', emailRaw))));
+          if (emailLower && emailLower !== emailRaw) {
+            queries.push(getDocs(query(reportsCol, where('authorEmail', '==', emailLower))));
+          }
+
+          const results = await Promise.all(queries);
+          const merged = new Map();
+          results.forEach(snap => {
+            snap.forEach(d => merged.set(d.id, { id: d.id, ...d.data() }));
+          });
+
+          setAllReports(Array.from(merged.values()));
+        }
       } catch (error) {
         console.error("Hesabatlar yüklənərkən xəta:", error);
       }
       setLoading(false);
     };
     fetchData();
-  }, []);
+  }, [user]);
 
   const getKindergartenNameById = (id) => kindergartens.find(k => k.id === id)?.adi || 'Bilinməyən';
 
@@ -95,7 +122,7 @@ const NewMonitoringReportsPage = () => {
     rayonCountObj[r.rayon]++;
   });
 
-  // 3. Ən çox "Xeyr" verilən sual (filtrə uyğun)
+  // 3. Ən çox "Xeyr" cavabı verilən sual (filtrə uyğun)
   const questionNoCounts = Array(monitoringQuestions.length).fill(0);
   filteredReports.forEach(r => {
     (r.answers || []).forEach((ans, i) => {
