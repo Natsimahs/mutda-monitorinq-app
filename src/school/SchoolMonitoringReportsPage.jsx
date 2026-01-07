@@ -57,38 +57,36 @@ const SchoolMonitoringReportsPage = ({ user }) => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Məktəblər
+        // 1) Məktəblər siyahısı
         const schoolSnapshot = await getDocs(collection(db, "mektebler"));
         setSchools(schoolSnapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
 
-        // Hesabatlar
+        // 2) Hesabatlar
         const reportsCol = collection(db, "newMektebMonitorinqHesabatlari");
 
-        if (user?.role === "admin") {
-          const reportSnapshot = await getDocs(reportsCol);
-          setAllReports(reportSnapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
-        } else {
-          const uid = user?.uid || "";
-          const emailRaw = (user?.email || "").trim();
-          const emailLower = emailRaw.toLowerCase();
+        const role = user?.role || "";
+        const isAdmin = ["admin", "subadmin"].includes(role);
 
-          const requests = [];
-          if (uid) requests.push(getDocs(query(reportsCol, where("authorId", "==", uid))));
-          if (emailRaw) requests.push(getDocs(query(reportsCol, where("authorEmail", "==", emailRaw))));
-          if (emailLower && emailLower !== emailRaw) {
-            requests.push(getDocs(query(reportsCol, where("authorEmail", "==", emailLower))));
-          }
-
-          const results = await Promise.all(requests);
-          const merged = new Map();
-          results.forEach((snap) => {
-            snap.forEach((docSnap) => merged.set(docSnap.id, { id: docSnap.id, ...docSnap.data() }));
-          });
-
-          setAllReports(Array.from(merged.values()));
+        // Admin/Subadmin → hamısı
+        if (isAdmin) {
+          const snap = await getDocs(reportsCol);
+          setAllReports(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+          return;
         }
+
+        // User → yalnız authorId ilə (RULES-ə 100% uyğun)
+        const uid = (user?.uid || "").trim();
+        if (!uid) {
+          setAllReports([]);
+          return;
+        }
+
+        const q = query(reportsCol, where("authorId", "==", uid));
+        const snap = await getDocs(q);
+        setAllReports(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
       } catch (error) {
         console.error("Hesabatlar yüklənərkən xəta:", error);
+        setAllReports([]);
       } finally {
         setLoading(false);
       }
@@ -97,7 +95,6 @@ const SchoolMonitoringReportsPage = ({ user }) => {
     fetchData();
   }, [user]);
 
-  // *** ƏSAS DÜZƏLİŞ: bu funksiya əvvəldən çağırıldığı üçün mütləq mövcud olmalıdır ***
   const getSchoolNameById = (id) => {
     if (!id) return "Bilinməyən";
     return schools.find((s) => s.id === id)?.adi || "Bilinməyən";
@@ -134,7 +131,6 @@ const SchoolMonitoringReportsPage = ({ user }) => {
 
   const filteredReports = useFilteredReports(filteredByDateAndRayon, searchTerm, showCriticalOnly);
 
-  // Statistika
   const totalCount = filteredReports.length;
 
   const questionNoCounts = Array(schoolMonitoringQuestions.length).fill(0);
@@ -143,6 +139,7 @@ const SchoolMonitoringReportsPage = ({ user }) => {
       if (ans === "Xeyr") questionNoCounts[i]++;
     });
   });
+
   const maxNoCount = Math.max(...questionNoCounts);
   const maxNoIndex = questionNoCounts.findIndex((v) => v === maxNoCount);
   const maxNoQuestion = maxNoCount > 0 ? schoolMonitoringQuestions[maxNoIndex] : "-";
@@ -199,10 +196,6 @@ const SchoolMonitoringReportsPage = ({ user }) => {
         Əməkdaş: report.authorEmail,
         Rayon: report.rayon,
         Müəssisə: getSchoolNameById(report.mektebId),
-        "Uşaq Tutumu": report.usaqTutumu,
-        "MTİS üzrə Uşaq Sayı": report.mtisUsaqSayi,
-        "Sifariş Edilən Qida": report.sifarisEdilenQida,
-        "Faktiki Uşaq Sayı": report.faktikiUsaqSayi,
       };
 
       schoolMonitoringQuestions.forEach((question, index) => {
@@ -228,7 +221,7 @@ const SchoolMonitoringReportsPage = ({ user }) => {
   return (
     <>
       <div className="reports-page-container">
-        <h2>Müəssisələr üzrə Monitorinq Hesabatları</h2>
+        <h2>Məktəblər üzrə Monitorinq Hesabatları</h2>
 
         <div className="stats-panel">
           <div className="stat-card">
@@ -316,11 +309,7 @@ const SchoolMonitoringReportsPage = ({ user }) => {
             <button onClick={() => handleExportToExcel(allReports, "Umumi_Hesabat")} className="export-button general-export">
               Ümumi Excel
             </button>
-            <button
-              onClick={() => setMapOpen(true)}
-              className="export-button"
-              style={{ background: "#38bdf8", color: "#fff" }}
-            >
+            <button onClick={() => setMapOpen(true)} className="export-button" style={{ background: "#38bdf8", color: "#fff" }}>
               Xəritədə Bax
             </button>
           </div>

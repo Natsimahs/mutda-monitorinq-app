@@ -1,7 +1,6 @@
-// src/NewMonitoringDetailModal.jsx
+// src/school/SchoolMonitoringDetailModal.jsx
 
 import React from 'react';
-
 import schoolMonitoringQuestions from './schoolMonitoringQuestions';
 
 const SchoolMonitoringDetailModal = ({ report, schoolName, onClose }) => {
@@ -15,45 +14,64 @@ const SchoolMonitoringDetailModal = ({ report, schoolName, onClose }) => {
           <p><strong>Tarix:</strong> {new Date(report.gonderilmeTarixi).toLocaleString('az-AZ')}</p>
           <button onClick={onClose} className="modal-close-button">&times;</button>
         </div>
+
         <div className="modal-body">
           <div className="modal-section">
             <h4>Ümumi Məlumatlar</h4>
             <p><strong>Rayon:</strong> {report.rayon}</p>
             <p><strong>Əməkdaş:</strong> {report.authorEmail}</p>
-            <p><strong>Monitorinq Müddəti:</strong> {new Date(report.monitorinqMuddeti * 1000).toISOString().substr(11, 8)}</p>
-            <p><strong>GPS Məkanı:</strong> {report.gps.lat}, {report.gps.lon}</p>
+            <p>
+              <strong>Monitorinq Müddəti:</strong>{" "}
+              {new Date((Number(report.monitorinqMuddeti || 0)) * 1000).toISOString().substr(11, 8)}
+            </p>
+            <p>
+              <strong>GPS Məkanı:</strong>{" "}
+              {report.gps?.lat ? `${report.gps.lat}, ${report.gps.lon}` : "Göstərilməyib"}
+            </p>
           </div>
-          <div className="modal-section">
-            <h4>Uşaq Sayları</h4>
-            <p><strong>Uşaq tutumu:</strong> {report.usaqTutumu}</p>
-            <p><strong>MTİS üzrə uşaq sayı:</strong> {report.mtisUsaqSayi}</p>
-            <p><strong>Sifariş edilən qida sayı:</strong> {report.sifarisEdilenQida}</p>
-            <p><strong>Faktiki uşaq sayı:</strong> {report.faktikiUsaqSayi}</p>
-          </div>
+
           <div className="modal-section">
             <h4>Monitorinq Sualları</h4>
-            {report.answers.map((answer, index) => (
-              <div key={index} className="modal-question">
-                <p><strong>{index + 1}. {schoolMonitoringQuestions[index]}:</strong> <span className={`answer-${answer}`}>{answer || 'Cavablanmayıb'}</span></p>
-                {report.notes[index] && <p className="modal-note"><strong>Qeyd:</strong> {report.notes[index]}</p>}
-                {report.fileURLs && report.fileURLs[index] && <p className="modal-file"><strong>Əlavə edilmiş fayl:</strong> <a href={report.fileURLs[index]} target="_blank" rel="noopener noreferrer">Yüklə</a></p>}
+
+            {schoolMonitoringQuestions.map((question, index) => (
+              <div key={index} className="question-detail-item">
+                <p><strong>{question}</strong></p>
+                <p><strong>Cavab:</strong> {report.answers?.[index] || 'N/A'}</p>
+                {(report.notes?.[index] || '').trim() && (
+                  <p><strong>Qeyd:</strong> {report.notes[index]}</p>
+                )}
+                {report.files?.[index] && (
+                  <p>
+                    <strong>Fayl:</strong>{" "}
+                    <a href={report.files[index]} target="_blank" rel="noreferrer">
+                      Bax
+                    </a>
+                  </p>
+                )}
+                <hr />
               </div>
             ))}
           </div>
-          <div className="modal-section">
-            <h4>İmzalar</h4>
-            <div className="modal-signatures-grid">
-              {report.signatures && report.signatures
-                .filter(sig => sig.adSoyad || sig.imzaData)
-                .map((sig, index) => (
-                  <div key={index} className="modal-signature-item">
-                    <p>{sig.adSoyad || 'Adsız'}</p>
-                    <p><em>{sig.vezife || 'Vəzifəsiz'}</em></p>
-                    {sig.imzaData && <img src={sig.imzaData} alt="İmza" />}
-                  </div>
-                ))}
+
+          {Array.isArray(report.signatures) && report.signatures.length > 0 && (
+            <div className="modal-section">
+              <h4>İmzalar</h4>
+              {report.signatures.map((sig, idx) => (
+                <div key={idx} style={{ marginBottom: 12 }}>
+                  <p><strong>Ad Soyad:</strong> {sig?.adSoyad || '-'}</p>
+                  <p><strong>Vəzifə:</strong> {sig?.vezife || '-'}</p>
+                  {sig?.imzaData && (
+                    <img
+                      src={sig.imzaData}
+                      alt={`İmza ${idx + 1}`}
+                      style={{ width: 260, maxWidth: "100%", border: "1px solid #ddd", borderRadius: 8 }}
+                    />
+                  )}
+                  <hr />
+                </div>
+              ))}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
