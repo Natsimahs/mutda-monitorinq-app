@@ -30,6 +30,27 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
             </div>
           </div>
 
+          {/* ✅ YENİ: Məktəb modulu (yalnız icazəli rollar görür) */}
+          {['admin', 'subadmin', 'mekteb_monitor'].includes(user.role) && (
+            <>
+              <div className="module-card" onClick={() => handleNavigate('school-monitoring')}>
+                <div className="card-icon color-3"><Ikonlar.Monitorinq /></div>
+                <div className="card-text">
+                  <h4>Məktəb Monitorinqi</h4>
+                  <p>Məktəblər üçün yoxlama forması.</p>
+                </div>
+              </div>
+
+              <div className="module-card" onClick={() => handleNavigate('school-monitoring-reports')}>
+                <div className="card-icon color-4"><Ikonlar.Netice /></div>
+                <div className="card-text">
+                  <h4>Məktəb - monitorinq hesabatları</h4>
+                  <p>Məktəb forması ilə aparılmış monitorinqlərin hesabatları.</p>
+                </div>
+              </div>
+            </>
+          )}
+
           {user.role === 'admin' && (
             <>
               <div className="module-card admin-card" onClick={() => handleNavigate('admin')}><div className="card-icon color-5"><Ikonlar.Idareetme /></div><div className="card-text"><h4>Məlumatların İdarə Edilməsi</h4><p>Sistemə yeni bağça, qrup və uşaq məlumatlarını daxil etmək.</p></div></div>

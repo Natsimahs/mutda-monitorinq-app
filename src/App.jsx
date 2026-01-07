@@ -15,6 +15,11 @@ import AttendancePage from './AttendancePage.jsx';
 import AttendanceReportsPage from './AttendanceReportsPage.jsx';
 import UserManagementPage from './UserManagementPage.jsx';
 import AktPDFModal from './AktPDFModal.jsx'; // Bunu da import etmək olar, amma birbaşa ReportsPage-də istifadə olunur
+
+// ✅ YENİ: Məktəb modulu importları
+import SchoolMonitoringForm from './school/SchoolMonitoringForm.jsx';
+import SchoolMonitoringReportsPage from './school/SchoolMonitoringReportsPage.jsx';
+
 import './App.css';
 
 const App = () => {
@@ -92,26 +97,42 @@ const App = () => {
     switch (currentPage) {
       case 'form':
         return <MonitoringForm />;
+
       case 'new-monitoring':
         // user prop-u ötürülür (authorEmail/authorId üçün lazımdır)
         return <NewMonitoringForm user={user} />;
+
       case 'reports':
         // user prop-u ötürülür (admin deyilsə yalnız öz hesabatlarını göstərmək üçün)
         return <NewMonitoringReportsPage user={user} />;
+
       case 'new-monitoring-reports':
         return <NewMonitoringReportsPage user={user} />;
+
+      // ✅ YENİ: Məktəb formu
+      case 'school-monitoring':
+        return <SchoolMonitoringForm user={user} />;
+
+      // ✅ YENİ: Məktəb hesabatları
+      case 'school-monitoring-reports':
+        return <SchoolMonitoringReportsPage user={user} />;
+
       case 'admin':
         return user.role === 'admin'
           ? <AdminManagementPage />
           : <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
+
       case 'settings':
         return user.role === 'admin'
           ? <UserManagementPage />
           : <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
+
       case 'attendance':
         return <AttendancePage user={user} />;
+
       case 'attendance-reports':
         return <AttendanceReportsPage />;
+
       case 'dashboard':
       default:
         return <Dashboard user={user} handleNavigate={handleNavigate} handleLogout={handleLogout} />;
