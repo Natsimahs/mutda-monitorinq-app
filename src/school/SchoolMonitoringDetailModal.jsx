@@ -6,6 +6,20 @@ import schoolMonitoringQuestions from './schoolMonitoringQuestions';
 const SchoolMonitoringDetailModal = ({ report, schoolName, onClose }) => {
   if (!report) return null;
 
+  // Fayl linkini geriyə uyğun şəkildə götürür:
+  // - Yeni sənədlər: report.fileURLs
+  // - Köhnə sənədlər: report.files
+  const getFileUrl = (index) => {
+    const fromFileURLs = Array.isArray(report.fileURLs) ? report.fileURLs[index] : undefined;
+    const fromFiles = Array.isArray(report.files) ? report.files[index] : undefined;
+
+    const url = fromFileURLs || fromFiles;
+
+    // Boş string, null, undefined kimi halları filtr edirik
+    if (typeof url === 'string' && url.trim().length > 0) return url.trim();
+    return null;
+  };
+
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -33,24 +47,36 @@ const SchoolMonitoringDetailModal = ({ report, schoolName, onClose }) => {
           <div className="modal-section">
             <h4>Monitorinq Sualları</h4>
 
-            {schoolMonitoringQuestions.map((question, index) => (
-              <div key={index} className="question-detail-item">
-                <p><strong>{question}</strong></p>
-                <p><strong>Cavab:</strong> {report.answers?.[index] || 'N/A'}</p>
-                {(report.notes?.[index] || '').trim() && (
-                  <p><strong>Qeyd:</strong> {report.notes[index]}</p>
-                )}
-                {report.files?.[index] && (
-                  <p>
-                    <strong>Fayl:</strong>{" "}
-                    <a href={report.files[index]} target="_blank" rel="noreferrer">
-                      Bax
-                    </a>
-                  </p>
-                )}
-                <hr />
-              </div>
-            ))}
+            {schoolMonitoringQuestions.map((question, index) => {
+              const fileUrl = getFileUrl(index);
+
+              return (
+                <div key={index} className="question-detail-item">
+                  <p><strong>{question}</strong></p>
+                  <p><strong>Cavab:</strong> {report.answers?.[index] || 'N/A'}</p>
+
+                  {(report.notes?.[index] || '').trim() && (
+                    <p><strong>Qeyd:</strong> {report.notes[index]}</p>
+                  )}
+
+                  {fileUrl && (
+                    <p>
+                      <strong>Əlavə edilmiş fayl:</strong>{" "}
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        download
+                      >
+                        Yüklə
+                      </a>
+                    </p>
+                  )}
+
+                  <hr />
+                </div>
+              );
+            })}
           </div>
 
           {Array.isArray(report.signatures) && report.signatures.length > 0 && (
