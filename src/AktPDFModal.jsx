@@ -39,7 +39,8 @@ const AktPDFModal = ({ report, kindergartenName, onClose }) => {
         pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightOnPdf);
         heightLeft -= pdfHeight;
 
-        while (heightLeft > 0) {
+        // Əgər qalan hissə (heightLeft) 15mm-dən azdırsa, o sadəcə ağ boşluqdur (padding), ona görə də yeni səhifə açmırıq.
+        while (heightLeft > 15) {
           position = heightLeft - imgHeightOnPdf;
           pdf.addPage();
           pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeightOnPdf);
