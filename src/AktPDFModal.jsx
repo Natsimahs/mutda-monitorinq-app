@@ -77,47 +77,41 @@ const AktPDFModal = ({ report, kindergartenName, onClose }) => {
           <div ref={aktContentRef} className="akt-content" style={{ fontSize: '13px', lineHeight: '1.5', padding: '20px', background: 'white', color: 'black' }}>
             <div className="akt-header">
               <p>AKT</p>
-              <div className="akt-header-details">
-                <span>Bakı şəhəri,</span>
-                <span><b>Tarix:</b> {new Date(report.gonderilmeTarixi).toLocaleDateString('az-AZ')}</span>
-                <span>{report.rayon} rayonu,</span>
-                <span><b>Saat:</b> {new Date(report.gonderilmeTarixi).toLocaleTimeString('az-AZ')}</span>
-                <span>{kindergartenName}</span>
-              </div>
+              {(!report.regionalIdare || report.regionalIdare === 'Bakı Şəhəri üzrə Təhsil İdarəsi') ? (
+                <div className="akt-header-details">
+                  <span>Bakı şəhəri,</span>
+                  <span><b>Tarix:</b> {new Date(report.gonderilmeTarixi).toLocaleDateString('az-AZ')}</span>
+                  <span>{report.rayon} rayonu,</span>
+                  <span><b>Saat:</b> {new Date(report.gonderilmeTarixi).toLocaleTimeString('az-AZ')}</span>
+                  <span>{kindergartenName}</span>
+                </div>
+              ) : (
+                <div className="akt-header-details">
+                  <span>{report.rayon} rayonu,</span>
+                  <span><b>Tarix:</b> {new Date(report.gonderilmeTarixi).toLocaleDateString('az-AZ')}</span>
+                  <span>{kindergartenName}</span>
+                  <span><b>Saat:</b> {new Date(report.gonderilmeTarixi).toLocaleTimeString('az-AZ')}</span>
+                </div>
+              )}
             </div>
 
-            {(!report.regionalIdare || report.regionalIdare === 'Bakı Şəhəri üzrə Təhsil İdarəsi') ? (
-              <>
-                <div className="akt-section">
-                  <p>Biz, aşağıda imza edənlər:</p>
-                  <div className="signature-lines">
-                    {report.signatures.filter(sig => sig.adSoyad).map((sig, index) => (
-                        <div key={index} className="signature-line">{sig.adSoyad}, {sig.vezife}</div>
-                    ))}
-                    {[...Array(Math.max(0, 5 - report.signatures.filter(sig => sig.adSoyad).length))].map((_, i) => (
-                        <div key={i} className="signature-line"></div>
-                    ))}
-                  </div>
-                </div>
-                <div className="akt-section">
-                  <p>
-                    Bu aktı tərtib edirik ona görə ki, qeyd olunan tarixdə müəssisədə olarkən aşağıdakı nəticələri aşkar etdik:
-                    Müəssisənin uşaq tutumu <b>{report.usaqTutumu}</b>, MTİS üzrə uşaq sayı <b>{report.mtisUsaqSayi}</b>, sifariş edilən qida sayı <b>{report.sifarisEdilenQida}</b>, faktiki uşaq sayı <b>{report.faktikiUsaqSayi}</b> olmuşdur.
-                  </p>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="akt-section" style={{textAlign: 'center', fontWeight: 'bold', margin: '20px 0', fontSize: '14px'}}>
-                  Məktəbəqədər təhsil müəssisələrində aparılan monitorinqə dair AKT
-                </div>
-                <div className="akt-section">
-                  <p>
-                    Müəssisənin uşaq tutumu <b>{report.usaqTutumu}</b>, MTİS üzrə uşaq sayı <b>{report.mtisUsaqSayi}</b>, sifariş edilən qida sayı <b>{report.sifarisEdilenQida}</b>, faktiki uşaq sayı <b>{report.faktikiUsaqSayi}</b> olmuşdur.
-                  </p>
-                </div>
-              </>
-            )}
+            <div className="akt-section">
+              <p>Biz, aşağıda imza edənlər:</p>
+              <div className="signature-lines">
+                {report.signatures.filter(sig => sig.adSoyad).map((sig, index) => (
+                    <div key={index} className="signature-line">{sig.adSoyad}, {sig.vezife}</div>
+                ))}
+                {[...Array(Math.max(0, 5 - report.signatures.filter(sig => sig.adSoyad).length))].map((_, i) => (
+                    <div key={i} className="signature-line"></div>
+                ))}
+              </div>
+            </div>
+            <div className="akt-section">
+              <p>
+                Bu aktı tərtib edirik ona görə ki, qeyd olunan tarixdə müəssisədə olarkən aşağıdakı nəticələri aşkar etdik:
+                Müəssisənin uşaq tutumu <b>{report.usaqTutumu}</b>, MTİS üzrə uşaq sayı <b>{report.mtisUsaqSayi}</b>, sifariş edilən qida sayı <b>{report.sifarisEdilenQida}</b>, faktiki uşaq sayı <b>{report.faktikiUsaqSayi}</b> olmuşdur.
+              </p>
+            </div>
 
             <div className="akt-section">
               {report.answers.map((answer, index) => (
