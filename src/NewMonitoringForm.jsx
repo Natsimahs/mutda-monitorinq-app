@@ -7,6 +7,7 @@ import { db } from './firebase';
 import NewQuestionBlock from './NewQuestionBlock.jsx';
 import SignaturePad from './SignaturePad.jsx';
 import { getAuth } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 import monitoringQuestions from './monitoringQuestions';
 
@@ -22,6 +23,22 @@ const Step1 = ({ data, setData, kindergartens }) => {
       setData({ ...data, regionalIdare: value, rayon: '', bagcaId: '' }); 
     } else if (name === 'rayon') { 
       setData({ ...data, rayon: value, bagcaId: '' }); 
+    } else if (name === 'bagcaId') {
+      setData({ ...data, bagcaId: value });
+      // Smart Draft Yüklənməsi
+      if (value) {
+        const savedDraft = localStorage.getItem(`draft_${value}`);
+        if (savedDraft) {
+          if (window.confirm("Bu bağça üçün yarımçıq qalmış hesabat (qaralama) tapıldı. Bərpa edilsin?")) {
+            try {
+              const parsedData = JSON.parse(savedDraft);
+              setData(prev => ({ ...prev, ...parsedData, bagcaId: value, rayon: prev.rayon, regionalIdare: prev.regionalIdare }));
+            } catch(e) {
+              console.error("Draft parsing xətası", e);
+            }
+          }
+        }
+      }
     } else { 
       setData({ ...data, [name]: value }); 
     }
@@ -122,46 +139,34 @@ const Step4 = ({ data, onSignatureChange }) => {
 };
 
 
-const NewMonitoringForm = ({ user, handleNavigate }) => {
+const NewMonitoringForm = ({ user }) => {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [kindergartens, setKindergartens] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [gpsData, setGpsData] = useState({ lat: '', lon: '' });
+  const [gpsData, setGpsData] = useState({ lat: null, lon: null });
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [elapsedTime, setElapsedTime] = useState(0);
 
-  // State-in ilkin yüklənməsi - indi 12 sual üçün düzəldilib
   const getInitialState = () => ({
-    regionalIdare: '', rayon: '', bagcaId: '', usaqTutumu: '', mtisUsaqSayi: '', sifarisEdilenQida: '', faktikiUsaqSayi: '',
+    regionalIdare: '', rayon: '', bagcaId: '',
+    usaqTutumu: '', mtisUsaqSayi: '', sifarisEdilenQida: '', faktikiUsaqSayi: '',
     answers: Array(monitoringQuestions.length).fill(''),
     notes: Array(monitoringQuestions.length).fill(''),
     files: Array(monitoringQuestions.length).fill([]),
     signatures: Array(6).fill({ adSoyad: '', vezife: '', imzaData: null }),
   });
 
-  const [formData, setFormData] = useState(() => {
-    const savedDraft = localStorage.getItem('newMonitoringFormDraft');
-    const initialState = getInitialState();
-    if (savedDraft) {
-      try {
-        const parsedData = JSON.parse(savedDraft);
-        // Yaddaşdakı datanı ilkin strukturla birləşdiririk
-        return { ...initialState, ...parsedData };
-      } catch (e) {
-        console.error("Qaralama yüklənərkən xəta:", e);
-        return initialState;
-      }
-    }
-    return initialState;
-  });
+  const [formData, setFormData] = useState(getInitialState);
 
-  // Avtomatik yadda saxlama
+  // Avtomatik yadda saxlama (Smart Draft - bagcaId-yə görə)
   useEffect(() => {
-    // Faylları yaddaşa yazmamaq üçün onları müvəqqəti silirik
-    const dataToSave = { ...formData };
-    delete dataToSave.files;
-    localStorage.setItem('newMonitoringFormDraft', JSON.stringify(dataToSave));
+    if (formData.bagcaId) {
+      const dataToSave = { ...formData };
+      delete dataToSave.files;
+      localStorage.setItem(`draft_${formData.bagcaId}`, JSON.stringify(dataToSave));
+    }
   }, [formData]);
 
   // Saat, Sayğac və GPS
@@ -203,16 +208,11 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
     setFormData({ ...formData, signatures: newSignatures });
   };
 
-  const saveAsDraft = () => {
-      alert("Forma qaralama kimi brauzer yaddaşında saxlanıldı!");
-  };
-
   const handleSubmit = async () => {
-    // İmza Validasiyası: Əgər Ad Soyad varsa, Vəzifə mütləq olmalıdır
     const invalidSignature = formData.signatures.find(sig => sig.adSoyad.trim() !== '' && sig.vezife.trim() === '');
     if (invalidSignature) {
         alert("Xəta: Ad və soyad daxil edilibsə, vəzifə də mütləq qeyd olunmalıdır.");
-        setCurrentStep(4); // Addım 4-ə qaytarır
+        setCurrentStep(4);
         return;
     }
 
@@ -251,12 +251,10 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
         const docRef = doc(collection(db, "newMonitorinqHesabatlari"));
         await setDoc(docRef, finalData);
         alert("Məlumatlar təsdiq edildi");
-        localStorage.removeItem('newMonitoringFormDraft');
-        if (handleNavigate) {
-            handleNavigate('dashboard');
-        } else {
-            window.location.reload();
-        }
+        
+        localStorage.removeItem(`draft_${formData.bagcaId}`);
+        
+        navigate('/monitoring/reports');
     } catch (error) {
         console.error("Xəta:", error);
         alert("Hesabat göndərilərkən xəta baş verdi.");
@@ -299,10 +297,12 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
           </div>
       </div>
       
-      <button onClick={saveAsDraft} className="draft-button">Qaralama kimi yadda saxla</button>
-
-      <div className="progress-bar-container"><div className="progress-bar" style={{ width: `${progress}%` }}></div></div>
-      <div className="step-counter">Addım {currentStep} / {totalSteps}</div>
+      <div className="progress-bar-container">
+        <div className="progress-bar" style={{ width: `${progress}%` }}></div>
+      </div>
+      
+      {/* Qaralama düyməsini ləğv etdik, çünki artıq avtomatik (Smart Draft) rejimində arxada işləyir */}
+      
       <div className="form-content">{isLoading ? <p>Məlumatlar yüklənir...</p> : renderStep()}</div>
       <div className="navigation-buttons">
         {currentStep > 1 && (<button onClick={prevStep} className="nav-button prev">Geri</button>)}

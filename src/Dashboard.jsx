@@ -1,6 +1,5 @@
-// src/Dashboard.jsx
-
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Ikonlar = {
   Davamiyyet: () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="m9 16 2 2 4-4"/></svg> ),
@@ -11,31 +10,24 @@ const Ikonlar = {
   Tenzimleme: () => ( <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 0 2l-.15.08a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l-.22-.38a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1 0-2l.15-.08a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> ),
 };
 
-const Dashboard = ({ user, handleNavigate, handleLogout }) => {
+const Dashboard = ({ user }) => {
+  const navigate = useNavigate();
   const isAdmin = ['admin', 'subadmin'].includes(user.role);
 
-  // ✅ Yeni rolar:
-  // school_user -> yalnız məktəb modulu
-  // mtm_user    -> yalnız MTM modulu (istəsən sonradan istifadə edərsən)
   const canSeeSchool = isAdmin || user.role === 'school_user' || user.role === 'mekteb_monitor';
   const canSeeMtm = isAdmin || user.role === 'mtm_user';
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="header-content">
-          <h1>Monitorinq və Qiymətləndirmə Sistemi</h1>
-          <p className="welcome-message">Xoş gəldiniz, {user.email} ({user.role})</p>
-        </div>
-        <button onClick={handleLogout} className="logout-button">Çıxış</button>
+      <header className="dashboard-header" style={{display: 'none'}}>
+        {/* Header content moved to Sidebar / Layout Topbar */}
       </header>
 
       <main className="module-selection">
         <h3>Zəhmət olmasa, davam etmək üçün bir modul seçin:</h3>
 
         <div className="module-grid">
-          {/* Davamiyyət: istəyinə görə hamıya aça bilərik. İndi olduğu kimi saxlayıram. */}
-          <div className="module-card" onClick={() => handleNavigate('attendance')}>
+          <div className="module-card" onClick={() => navigate('/attendance')}>
             <div className="card-icon color-1"><Ikonlar.Davamiyyet /></div>
             <div className="card-text">
               <h4>Elektron Davamiyyət Jurnalı</h4>
@@ -43,7 +35,7 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
             </div>
           </div>
 
-          <div className="module-card" onClick={() => handleNavigate('attendance-reports')}>
+          <div className="module-card" onClick={() => navigate('/attendance/reports')}>
             <div className="card-icon color-2"><Ikonlar.Hesabat /></div>
             <div className="card-text">
               <h4>Davamiyyət Hesabatları</h4>
@@ -51,10 +43,9 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
             </div>
           </div>
 
-          {/* ✅ MTM modulu: yalnız admin/subadmin/mtm_user */}
           {canSeeMtm && (
             <>
-              <div className="module-card" onClick={() => handleNavigate('new-monitoring')}>
+              <div className="module-card" onClick={() => navigate('/monitoring/new')}>
                 <div className="card-icon color-3"><Ikonlar.Monitorinq /></div>
                 <div className="card-text">
                   <h4>MTM Monitorinqi (Yeni)</h4>
@@ -62,7 +53,7 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
                 </div>
               </div>
 
-              <div className="module-card" onClick={() => handleNavigate('new-monitoring-reports')}>
+              <div className="module-card" onClick={() => navigate('/monitoring/reports')}>
                 <div className="card-icon color-4"><Ikonlar.Netice /></div>
                 <div className="card-text">
                   <h4>MTM - monitorinq hesabatı (yeni)</h4>
@@ -72,10 +63,9 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
             </>
           )}
 
-          {/* ✅ Məktəb modulu: admin/subadmin/school_user/mekteb_monitor */}
           {canSeeSchool && (
             <>
-              <div className="module-card" onClick={() => handleNavigate('school-monitoring')}>
+              <div className="module-card" onClick={() => navigate('/school/new')}>
                 <div className="card-icon color-3"><Ikonlar.Monitorinq /></div>
                 <div className="card-text">
                   <h4>Məktəb Monitorinqi</h4>
@@ -83,7 +73,7 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
                 </div>
               </div>
 
-              <div className="module-card" onClick={() => handleNavigate('school-monitoring-reports')}>
+              <div className="module-card" onClick={() => navigate('/school/reports')}>
                 <div className="card-icon color-4"><Ikonlar.Netice /></div>
                 <div className="card-text">
                   <h4>Məktəb - monitorinq hesabatları</h4>
@@ -95,7 +85,7 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
 
           {user.role === 'admin' && (
             <>
-              <div className="module-card admin-card" onClick={() => handleNavigate('admin')}>
+              <div className="module-card admin-card" onClick={() => navigate('/admin')}>
                 <div className="card-icon color-5"><Ikonlar.Idareetme /></div>
                 <div className="card-text">
                   <h4>Məlumatların İdarə Edilməsi</h4>
@@ -103,7 +93,7 @@ const Dashboard = ({ user, handleNavigate, handleLogout }) => {
                 </div>
               </div>
 
-              <div className="module-card admin-card" onClick={() => handleNavigate('settings')}>
+              <div className="module-card admin-card" onClick={() => navigate('/settings')}>
                 <div className="card-icon color-6"><Ikonlar.Tenzimleme /></div>
                 <div className="card-text">
                   <h4>Tənzimləmələr</h4>
