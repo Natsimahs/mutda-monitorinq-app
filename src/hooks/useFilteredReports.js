@@ -1,8 +1,16 @@
 import { useMemo } from "react";
 function filterCriticalReports(reports, minNoCount = 3) {
-  return reports.filter(report =>
-    (report.answers?.filter(ans => ans === "Xeyr").length || 0) >= minNoCount
-  );
+  return reports.filter(report => {
+    let negativeCount = 0;
+    (report.answers || []).forEach((ans, index) => {
+      if (index === 7) {
+        if (ans === "Bəli") negativeCount++;
+      } else {
+        if (ans === "Xeyr") negativeCount++;
+      }
+    });
+    return negativeCount >= minNoCount;
+  });
 }
 function searchReports(reports, searchTerm) {
   if (!searchTerm) return reports;

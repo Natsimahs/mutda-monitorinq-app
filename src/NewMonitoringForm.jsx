@@ -12,18 +12,45 @@ import monitoringQuestions from './monitoringQuestions';
 
 // Komponentlər hər addım üçün (əvvəlki kimi)
 const Step1 = ({ data, setData, kindergartens }) => {
-  const rayonlar = [...new Set(kindergartens.map(kg => kg.rayon))];
-  const bagcalarInRayon = kindergartens.filter(kg => kg.rayon === data.rayon);
+  const regionalIdareler = [...new Set(kindergartens.map(kg => kg.regionalIdare).filter(Boolean))];
+  const rayonlar = [...new Set(kindergartens.filter(kg => kg.regionalIdare === data.regionalIdare).map(kg => kg.rayon).filter(Boolean))];
+  const bagcalarInRayon = kindergartens.filter(kg => kg.regionalIdare === data.regionalIdare && kg.rayon === data.rayon);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'rayon') { setData({ ...data, rayon: value, bagcaId: '' }); } 
-    else { setData({ ...data, [name]: value }); }
+    if (name === 'regionalIdare') { 
+      setData({ ...data, regionalIdare: value, rayon: '', bagcaId: '' }); 
+    } else if (name === 'rayon') { 
+      setData({ ...data, rayon: value, bagcaId: '' }); 
+    } else { 
+      setData({ ...data, [name]: value }); 
+    }
   };
+  
   return (
     <div>
       <h3>Addım 1: Ümumi Məlumatlar</h3>
-      <div className="form-group"><label>Rayon seçin *</label><select name="rayon" value={data.rayon} onChange={handleChange} required><option value="">Rayon seçin...</option>{rayonlar.map(r => <option key={r} value={r}>{r}</option>)}</select></div>
-      <div className="form-group"><label>Müəssisəni seçin *</label><select name="bagcaId" value={data.bagcaId} onChange={handleChange} required disabled={!data.rayon}><option value="">Bağça seçin...</option>{bagcalarInRayon.map(b => <option key={b.id} value={b.id}>{b.adi}</option>)}</select></div>
+      <div className="form-group">
+        <label>Regional təhsil idarəsini seçin *</label>
+        <select name="regionalIdare" value={data.regionalIdare || ''} onChange={handleChange} required>
+          <option value="">İdarəni seçin...</option>
+          {regionalIdareler.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Rayonu seçin *</label>
+        <select name="rayon" value={data.rayon || ''} onChange={handleChange} required disabled={!data.regionalIdare}>
+          <option value="">Rayon seçin...</option>
+          {rayonlar.map(r => <option key={r} value={r}>{r}</option>)}
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Müəssisəni seçin *</label>
+        <select name="bagcaId" value={data.bagcaId || ''} onChange={handleChange} required disabled={!data.rayon}>
+          <option value="">Bağça seçin...</option>
+          {bagcalarInRayon.map(b => <option key={b.id} value={b.id}>{b.adi}</option>)}
+        </select>
+      </div>
     </div>
   );
 };
@@ -66,10 +93,10 @@ const Step3 = ({ data, setData, onFileChange }) => {
           question={q}
           answer={data.answers[index]}
           note={data.notes[index]}
-          file={data.files[index]}
+          files={data.files[index] || []}
           onAnswerChange={(answer) => handleAnswerChange(index, answer)}
           onNoteChange={(note) => handleNoteChange(index, note)}
-          onFileChange={(file) => onFileChange(index, file)}
+          onFileChange={(files) => onFileChange(index, files)}
         />
       ))}
     </div>
@@ -95,7 +122,7 @@ const Step4 = ({ data, onSignatureChange }) => {
 };
 
 
-const NewMonitoringForm = () => {
+const NewMonitoringForm = ({ user, handleNavigate }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [kindergartens, setKindergartens] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -106,10 +133,10 @@ const NewMonitoringForm = () => {
 
   // State-in ilkin yüklənməsi - indi 12 sual üçün düzəldilib
   const getInitialState = () => ({
-    rayon: '', bagcaId: '', usaqTutumu: '', mtisUsaqSayi: '', sifarisEdilenQida: '', faktikiUsaqSayi: '',
+    regionalIdare: '', rayon: '', bagcaId: '', usaqTutumu: '', mtisUsaqSayi: '', sifarisEdilenQida: '', faktikiUsaqSayi: '',
     answers: Array(monitoringQuestions.length).fill(''),
     notes: Array(monitoringQuestions.length).fill(''),
-    files: Array(monitoringQuestions.length).fill(null),
+    files: Array(monitoringQuestions.length).fill([]),
     signatures: Array(6).fill({ adSoyad: '', vezife: '', imzaData: null }),
   });
 
@@ -181,19 +208,31 @@ const NewMonitoringForm = () => {
   };
 
   const handleSubmit = async () => {
+    // İmza Validasiyası: Əgər Ad Soyad varsa, Vəzifə mütləq olmalıdır
+    const invalidSignature = formData.signatures.find(sig => sig.adSoyad.trim() !== '' && sig.vezife.trim() === '');
+    if (invalidSignature) {
+        alert("Xəta: Ad və soyad daxil edilibsə, vəzifə də mütləq qeyd olunmalıdır.");
+        setCurrentStep(4); // Addım 4-ə qaytarır
+        return;
+    }
+
     setIsSubmitting(true);
     const auth = getAuth();
-    const user = auth.currentUser;
+    const currentUser = auth.currentUser;
 
     try {
         const fileURLs = await Promise.all(
-            formData.files.map(async (file) => {
-                if (!file) return null;
-                const storage = getStorage();
-                const filePath = `uploads/${user.uid}/${Date.now()}_${file.name}`;
-                const storageRef = ref(storage, filePath);
-                await uploadBytes(storageRef, file);
-                return await getDownloadURL(storageRef);
+            formData.files.map(async (questionFiles) => {
+                if (!questionFiles || questionFiles.length === 0) return [];
+                const urls = await Promise.all(questionFiles.map(async (file) => {
+                    if (typeof file === 'string') return file; // Zaten URL-dirsə (nadir hal)
+                    const storage = getStorage();
+                    const filePath = `uploads/${currentUser.uid}/${Date.now()}_${file.name}`;
+                    const storageRef = ref(storage, filePath);
+                    await uploadBytes(storageRef, file);
+                    return await getDownloadURL(storageRef);
+                }));
+                return urls;
             })
         );
 
@@ -203,8 +242,8 @@ const NewMonitoringForm = () => {
 
         const finalData = {
             ...dataToSave,
-            authorId: user.uid,
-            authorEmail: user.email,
+            authorId: currentUser.uid,
+            authorEmail: currentUser.email,
             gonderilmeTarixi: new Date().toISOString(),
             gps: gpsData,
             monitorinqMuddeti: elapsedTime,
@@ -212,9 +251,13 @@ const NewMonitoringForm = () => {
         
         const docRef = doc(collection(db, "newMonitorinqHesabatlari"));
         await setDoc(docRef, finalData);
-        alert("Monitorinq uğurla təsdiqləndi!");
+        alert("Məlumatlar təsdiq edildi");
         localStorage.removeItem('newMonitoringFormDraft');
-        window.location.reload(); 
+        if (handleNavigate) {
+            handleNavigate('dashboard');
+        } else {
+            window.location.reload();
+        }
     } catch (error) {
         console.error("Xəta:", error);
         alert("Hesabat göndərilərkən xəta baş verdi.");
@@ -225,8 +268,8 @@ const NewMonitoringForm = () => {
 
   const nextStep = () => {
     if (currentStep < totalSteps) {
-      if (currentStep === 1 && (!formData.rayon || !formData.bagcaId)) {
-        alert("Zəhmət olmasa, rayon və müəssisəni seçin.");
+      if (currentStep === 1 && (!formData.regionalIdare || !formData.rayon || !formData.bagcaId)) {
+        alert("Zəhmət olmasa, regional idarə, rayon və müəssisəni seçin.");
         return;
       }
       setCurrentStep(currentStep + 1);

@@ -2,11 +2,25 @@
 
 import React, { useRef } from 'react';
 
-const NewQuestionBlock = ({ question, index, answer, note, file, onAnswerChange, onNoteChange, onFileChange }) => {
+const NewQuestionBlock = ({ question, index, answer, note, files = [], onAnswerChange, onNoteChange, onFileChange }) => {
   
   // Gizli input elementlərinə müraciət etmək üçün
   const cameraInputRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const handleFileSelect = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    if (files.length + selectedFiles.length > 5) {
+      alert("Maksimum 5 fayl yükləyə bilərsiniz.");
+      return;
+    }
+    onFileChange([...files, ...selectedFiles].slice(0, 5));
+  };
+
+  const removeFile = (fileIndex) => {
+    const newFiles = files.filter((_, i) => i !== fileIndex);
+    onFileChange(newFiles);
+  };
 
   return (
     <div className="new-question-block">
@@ -27,14 +41,16 @@ const NewQuestionBlock = ({ question, index, answer, note, file, onAnswerChange,
             type="file" 
             accept="image/*" 
             capture="environment" 
+            multiple
             ref={cameraInputRef} 
-            onChange={(e) => onFileChange(e.target.files[0])} 
+            onChange={handleFileSelect} 
             style={{ display: 'none' }}
           />
           <input 
             type="file" 
+            multiple
             ref={fileInputRef} 
-            onChange={(e) => onFileChange(e.target.files[0])} 
+            onChange={handleFileSelect} 
             style={{ display: 'none' }}
           />
         </div>
@@ -54,9 +70,17 @@ const NewQuestionBlock = ({ question, index, answer, note, file, onAnswerChange,
       ></textarea>
 
       {/* Yüklənmiş faylın adını göstərmək üçün */}
-      {file && (
+      {files && files.length > 0 && (
         <div className="file-display">
-          Yüklənmiş fayl: <strong>{typeof file === 'string' ? file.split('/').pop().split('?')[0].slice(14) : file.name}</strong>
+          <strong>Yüklənmiş fayllar ({files.length}/5):</strong>
+          <ul>
+            {files.map((f, i) => (
+              <li key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                <span>{typeof f === 'string' ? f.split('/').pop().split('?')[0].slice(14) : f.name}</span>
+                <button type="button" onClick={() => removeFile(i)} style={{ background: 'red', color: 'white', border: 'none', borderRadius: '4px', padding: '2px 6px', cursor: 'pointer', fontSize: '12px' }}>Sil</button>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
     </div>

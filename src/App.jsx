@@ -100,7 +100,7 @@ const App = () => {
 
       case 'new-monitoring':
         // user prop-u ötürülür (authorEmail/authorId üçün lazımdır)
-        return <NewMonitoringForm user={user} />;
+        return <NewMonitoringForm user={user} handleNavigate={handleNavigate} />;
 
       case 'reports':
         // user prop-u ötürülür (admin deyilsə yalnız öz hesabatlarını göstərmək üçün)

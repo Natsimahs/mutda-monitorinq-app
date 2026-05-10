@@ -1,6 +1,6 @@
 // src/MapModal.jsx
 import React from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from 'leaflet';
 
@@ -14,21 +14,31 @@ const DefaultIcon = L.icon({
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
+function MapBounds({ gpsList }) {
+  const map = useMap();
+  React.useEffect(() => {
+    if (gpsList && gpsList.length > 0) {
+      const bounds = L.latLngBounds(gpsList.map(g => [g.lat, g.lon]));
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [gpsList, map]);
+  return null;
+}
+
 export default function MapModal({ gpsList = [], onClose }) {
-  // gpsList: [{lat, lon, title, id}] formatında
-  const center = gpsList.length
-    ? [gpsList[0].lat, gpsList[0].lon]
-    : [40.4093, 49.8671]; // Bakı default
+  // Əgər siyahı boşdursa Azərbaycanın mərkəzi nöqtəsi
+  const defaultCenter = [40.1431, 47.5769];
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{width: '90vw', maxWidth: 800, height: 500}}>
         <button onClick={onClose} style={{float: 'right'}}>Bağla</button>
-        <MapContainer center={center} zoom={11} style={{ height: "100%", width: "100%", borderRadius: 12 }}>
+        <MapContainer center={defaultCenter} zoom={7} style={{ height: "100%", width: "100%", borderRadius: 12 }}>
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
           />
+          <MapBounds gpsList={gpsList} />
           {gpsList.map((gps, idx) =>
             <Marker key={gps.id || idx} position={[gps.lat, gps.lon]}>
               <Popup>

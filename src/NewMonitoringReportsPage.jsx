@@ -10,9 +10,18 @@ import { useFilteredReports } from './hooks/useFilteredReports';
 import MapModal from './MapModal.jsx';
 
 function getRiskLevel(report) {
-  const count = report.answers?.filter(a => a === "Xeyr").length || 0;
-  if (count >= 3) return "🔴";
-  if (count >= 1) return "🟡";
+  let negativeCount = 0;
+  if (report.answers) {
+    report.answers.forEach((ans, index) => {
+      if (index === 7) {
+        if (ans === "Bəli") negativeCount++;
+      } else {
+        if (ans === "Xeyr") negativeCount++;
+      }
+    });
+  }
+  if (negativeCount >= 3) return "🔴";
+  if (negativeCount >= 1) return "🟡";
   return "🟢";
 }
 
@@ -24,7 +33,9 @@ const NewMonitoringReportsPage = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedRegional, setSelectedRegional] = useState('all');
   const [selectedRayon, setSelectedRayon] = useState('all');
+  const [selectedMekteb, setSelectedMekteb] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'gonderilmeTarixi', direction: 'descending' });
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedReportForAkt, setSelectedReportForAkt] = useState(null);
@@ -33,7 +44,7 @@ const NewMonitoringReportsPage = ({ user }) => {
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [visibleColumns, setVisibleColumns] = useState([
-    "Tarix", "Saat", "Risk", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF"
+    "Tarix", "Saat", "Risk", "Regional İdarə", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF"
   ]);
   // Xəritə modalı üçün state
   const [mapOpen, setMapOpen] = useState(false);
@@ -84,7 +95,7 @@ const NewMonitoringReportsPage = ({ user }) => {
   const getKindergartenNameById = (id) => kindergartens.find(k => k.id === id)?.adi || 'Bilinməyən';
 
   // Mövcud filterlərə search və kritiklik filtri əlavə olundu
-  const filteredByDateAndRayon = useMemo(() => {
+  const filteredByDateAndHierarchy = useMemo(() => {
     let filtered = allReports.filter(report => {
       const reportDate = new Date(report.gonderilmeTarixi);
       const start = startDate ? new Date(startDate) : null;
@@ -92,8 +103,12 @@ const NewMonitoringReportsPage = ({ user }) => {
       const end = endDate ? new Date(endDate) : null;
       if (end) end.setHours(23, 59, 59, 999);
       const dateFilterPassed = (!start || reportDate >= start) && (!end || reportDate <= end);
+      
+      const regionalFilterPassed = (selectedRegional === 'all' || report.regionalIdare === selectedRegional);
       const rayonFilterPassed = (selectedRayon === 'all' || report.rayon === selectedRayon);
-      return dateFilterPassed && rayonFilterPassed;
+      const mektebFilterPassed = (selectedMekteb === 'all' || report.bagcaId === selectedMekteb);
+      
+      return dateFilterPassed && regionalFilterPassed && rayonFilterPassed && mektebFilterPassed;
     });
     // Sort
     if (sortConfig.key) {
@@ -106,10 +121,10 @@ const NewMonitoringReportsPage = ({ user }) => {
       });
     }
     return filtered;
-  }, [allReports, startDate, endDate, selectedRayon, sortConfig]);
+  }, [allReports, startDate, endDate, selectedRegional, selectedRayon, selectedMekteb, sortConfig]);
 
   // Əlavə filtrləmə və search (custom hook ilə)
-  const filteredReports = useFilteredReports(filteredByDateAndRayon, searchTerm, showCriticalOnly);
+  const filteredReports = useFilteredReports(filteredByDateAndHierarchy, searchTerm, showCriticalOnly);
 
   // --- STATİSTİKA HESABLARI ---
   // 1. Ümumi monitorinq sayı (filtrə uyğun)
@@ -122,11 +137,15 @@ const NewMonitoringReportsPage = ({ user }) => {
     rayonCountObj[r.rayon]++;
   });
 
-  // 3. Ən çox "Xeyr" cavabı verilən sual (filtrə uyğun)
+  // 3. Ən çox mənfi cavab verilən sual (filtrə uyğun)
   const questionNoCounts = Array(monitoringQuestions.length).fill(0);
   filteredReports.forEach(r => {
     (r.answers || []).forEach((ans, i) => {
-      if(ans === "Xeyr") questionNoCounts[i]++;
+      if (i === 7) {
+        if(ans === "Bəli") questionNoCounts[i]++;
+      } else {
+        if(ans === "Xeyr") questionNoCounts[i]++;
+      }
     });
   });
   const maxNoCount = Math.max(...questionNoCounts);
@@ -150,6 +169,7 @@ const NewMonitoringReportsPage = ({ user }) => {
     { key: "Tarix", title: "Tarix" },
     { key: "Saat", title: "Saat" },
     { key: "Risk", title: "Kritiklik" },
+    { key: "Regional İdarə", title: "Regional İdarə" },
     { key: "Rayon", title: "Rayon" },
     { key: "Müəssisə", title: "Müəssisə" },
     { key: "Əməkdaş", title: "Əməkdaş" },
@@ -175,7 +195,19 @@ const NewMonitoringReportsPage = ({ user }) => {
       if (sortConfig.key !== key) return '↕';
       return sortConfig.direction === 'ascending' ? '▲' : '▼';
   }
-  const rayonlar = [...new Set(kindergartens.map(kg => kg.rayon))];
+  
+  const regionalIdareler = useMemo(() => [...new Set(kindergartens.map(kg => kg.regionalIdare).filter(Boolean))], [kindergartens]);
+  const rayonlar = useMemo(() => {
+    if (selectedRegional === 'all') return [...new Set(kindergartens.map(kg => kg.rayon).filter(Boolean))];
+    return [...new Set(kindergartens.filter(kg => kg.regionalIdare === selectedRegional).map(kg => kg.rayon).filter(Boolean))];
+  }, [kindergartens, selectedRegional]);
+  const mekteblerFilterList = useMemo(() => {
+    let filteredKgs = kindergartens;
+    if (selectedRegional !== 'all') filteredKgs = filteredKgs.filter(kg => kg.regionalIdare === selectedRegional);
+    if (selectedRayon !== 'all') filteredKgs = filteredKgs.filter(kg => kg.rayon === selectedRayon);
+    return filteredKgs;
+  }, [kindergartens, selectedRegional, selectedRayon]);
+
   if (loading) return <div className="loading-screen">Hesabatlar yüklənir...</div>;
   const handleExportToExcel = (dataToExport, fileName) => {
     if (dataToExport.length === 0) {
@@ -189,6 +221,7 @@ const NewMonitoringReportsPage = ({ user }) => {
             'Monitorinq Müddəti': new Date(report.monitorinqMuddeti * 1000).toISOString().substr(11, 8),
             'GPS Ünvan': `${report.gps?.lat || ''}, ${report.gps?.lon || ''}`,
             'Əməkdaş': report.authorEmail,
+            'Regional Təhsil İdarəsi': report.regionalIdare,
             'Rayon': report.rayon,
             'Müəssisə': getKindergartenNameById(report.bagcaId),
             'Uşaq Tutumu': report.usaqTutumu,
@@ -222,12 +255,12 @@ const NewMonitoringReportsPage = ({ user }) => {
     <div className="stat-hint">Seçilmiş dövrdə</div>
   </div>
   <div className="stat-card">
-    <div className="stat-label">Ən çox “Xeyr” cavabı verilən sual</div>
+    <div className="stat-label">Ən çox mənfi cavab verilən sual</div>
     <div className="stat-value" style={{fontSize:'1.04em', fontWeight:600}}>
       {maxNoQuestion !== "-" ? maxNoQuestion : <span style={{fontWeight:400}}>Sual yoxdur</span>}
     </div>
     <div className="stat-hint">
-      {maxNoQuestion !== "-" ? `"Xeyr" cavabının sayı: ${maxNoCount}` : ""}
+      {maxNoQuestion !== "-" ? `Mənfi cavabın sayı: ${maxNoCount}` : ""}
     </div>
   </div>
 </div>
@@ -237,7 +270,23 @@ const NewMonitoringReportsPage = ({ user }) => {
         <div className="filters-container">
           <div className="date-filters"><label>Başlanğıc Tarix:</label><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
           <div className="date-filters"><label>Son Tarix:</label><input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
-          <select value={selectedRayon} onChange={(e) => setSelectedRayon(e.target.value)}><option value="all">Bütün Rayonlar</option>{rayonlar.map(r => <option key={r} value={r}>{r}</option>)}</select>
+          
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+            <select value={selectedRegional} onChange={(e) => { setSelectedRegional(e.target.value); setSelectedRayon('all'); setSelectedMekteb('all'); setCurrentPage(1); }}>
+              <option value="all">Bütün Regional İdarələr</option>
+              {regionalIdareler.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <select value={selectedRayon} onChange={(e) => { setSelectedRayon(e.target.value); setSelectedMekteb('all'); setCurrentPage(1); }}>
+              <option value="all">Bütün Rayonlar</option>
+              {rayonlar.map(r => <option key={r} value={r}>{r}</option>)}
+            </select>
+            <select value={selectedMekteb} onChange={(e) => { setSelectedMekteb(e.target.value); setCurrentPage(1); }}>
+              <option value="all">Bütün Müəssisələr</option>
+              {mekteblerFilterList.map(m => <option key={m.id} value={m.id}>{m.adi}</option>)}
+            </select>
+          </div>
+          
+          <div style={{ marginTop: '8px' }}>
           <input
             type="text"
             placeholder="Açar söz ilə axtar..."
@@ -246,7 +295,7 @@ const NewMonitoringReportsPage = ({ user }) => {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            style={{ padding: 8, marginLeft: 16, width: 200 }}
+            style={{ padding: 8, width: 200 }}
           />
           <label style={{ marginLeft: 8 }}>
             <input
@@ -257,8 +306,9 @@ const NewMonitoringReportsPage = ({ user }) => {
                 setCurrentPage(1);
               }}
             />
-            Yalnız ən az 3 "Xeyr" olanlar
+            Yalnız kritik (ən az 3 mənfi cavab) olanlar
           </label>
+          </div>
           <div className="export-buttons-group">
             <button onClick={() => handleExportToExcel(filteredReports, 'Filtrli_Hesabat')} className="export-button">
               Filtrə uyğun Excel
@@ -302,6 +352,7 @@ const NewMonitoringReportsPage = ({ user }) => {
                     {visibleColumns.includes("Tarix") && <td>{new Date(report.gonderilmeTarixi).toLocaleDateString('az-AZ')}</td>}
                     {visibleColumns.includes("Saat") && <td>{new Date(report.gonderilmeTarixi).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' })}</td>}
                     {visibleColumns.includes("Risk") && <td>{getRiskLevel(report)}</td>}
+                    {visibleColumns.includes("Regional İdarə") && <td>{report.regionalIdare}</td>}
                     {visibleColumns.includes("Rayon") && <td>{report.rayon}</td>}
                     {visibleColumns.includes("Müəssisə") && <td>{getKindergartenNameById(report.bagcaId)}</td>}
                     {visibleColumns.includes("Əməkdaş") && <td>{report.authorEmail}</td>}
