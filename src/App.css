@@ -356,6 +356,23 @@ legend { padding: 0 10px; font-weight: 600; color: #34495e; }
   .signature-inputs { flex-direction: column; }
   .header-info-bar { flex-direction: column; align-items: flex-start; }
   .modal-content { padding: 1rem; }
+
+  /* MƏXSUSİ MOBİL STİLLƏR - Yeni Monitorinq Forması Üçün */
+  .new-monitoring-form-container { padding: 1rem; margin: 1rem auto; border-radius: 8px; }
+  .new-question-block { padding: 1rem; margin-bottom: 1.5rem; }
+  .new-question-block .question-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .new-question-block .question-actions { width: 100%; display: flex; gap: 10px; }
+  .new-question-block .action-btn { flex: 1; justify-content: center; padding: 10px; font-size: 0.9rem; }
+  .new-question-block .radio-group { flex-direction: column; gap: 1rem; margin: 1.5rem 0; }
+  .new-question-block .radio-group label { padding: 8px 0; border-bottom: 1px solid #f0f0f0; width: 100%; }
+  .new-question-block .note-input { min-height: 100px; font-size: 1rem; }
+  
+  .navigation-buttons { flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .nav-button { flex: 1; min-width: 40%; text-align: center; padding: 12px 10px; }
+  .nav-button.submit { width: 100%; min-width: 100%; margin-top: 10px; padding: 15px; font-size: 1.1rem; }
+  
+  .draft-button { top: auto; bottom: 20px; right: 20px; width: 50px; height: 50px; padding: 0; border-radius: 50%; box-shadow: 0 4px 15px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 0; }
+  .draft-button::before { content: "💾"; font-size: 1.5rem; }
 }
 /* src/App.css faylının sonuna əlavə olunacaq stillər */
 
