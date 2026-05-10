@@ -36,15 +36,26 @@ const NewMonitoringDetailModal = ({ report, kindergartenName, onClose }) => {
               <div key={index} className="modal-question">
                 <p><strong>{index + 1}. {monitoringQuestions[index]}:</strong> <span className={`answer-${answer}`}>{answer || 'Cavablanmayıb'}</span></p>
                 {report.notes[index] && <p className="modal-note"><strong>Qeyd:</strong> {report.notes[index]}</p>}
-                {report.fileURLs && report.fileURLs[index.toString()] && report.fileURLs[index.toString()].length > 0 && (
-                  <p className="modal-file" style={{ marginTop: '8px' }}>
-                    <strong>Əlavə edilmiş fayllar:</strong>{' '}
-                    {report.fileURLs[index.toString()].map((url, i) => (
-                      <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ marginRight: '12px', color: '#0ea5e9', textDecoration: 'underline' }}>
-                        Fayl {i + 1}
-                      </a>
-                    ))}
-                  </p>
+                {report.fileURLs && (
+                  Array.isArray(report.fileURLs) ? (
+                    report.fileURLs[index] && (
+                      <p className="modal-file" style={{ marginTop: '8px' }}>
+                        <strong>Əlavə edilmiş fayl:</strong>{' '}
+                        <a href={report.fileURLs[index]} target="_blank" rel="noopener noreferrer" style={{ color: '#0ea5e9', textDecoration: 'underline' }}>Yüklə</a>
+                      </p>
+                    )
+                  ) : (
+                    report.fileURLs[index.toString()] && report.fileURLs[index.toString()].length > 0 && (
+                      <p className="modal-file" style={{ marginTop: '8px' }}>
+                        <strong>Əlavə edilmiş fayllar:</strong>{' '}
+                        {report.fileURLs[index.toString()].map((url, i) => (
+                          <a key={i} href={url} target="_blank" rel="noopener noreferrer" style={{ marginRight: '12px', color: '#0ea5e9', textDecoration: 'underline' }}>
+                            Fayl {i + 1}
+                          </a>
+                        ))}
+                      </p>
+                    )
+                  )
                 )}
               </div>
             ))}

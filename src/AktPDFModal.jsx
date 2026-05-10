@@ -86,7 +86,7 @@ const AktPDFModal = ({ report, kindergartenName, onClose }) => {
               </div>
             </div>
 
-            {report.regionalIdare === 'Bakı Şəhəri üzrə Təhsil İdarəsi' ? (
+            {(!report.regionalIdare || report.regionalIdare === 'Bakı Şəhəri üzrə Təhsil İdarəsi') ? (
               <>
                 <div className="akt-section">
                   <p>Biz, aşağıda imza edənlər:</p>
