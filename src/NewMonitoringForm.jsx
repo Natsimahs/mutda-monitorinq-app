@@ -219,24 +219,25 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
     setIsSubmitting(true);
 
     try {
-        const fileURLs = await Promise.all(
-            formData.files.map(async (questionFiles) => {
-                if (!questionFiles || questionFiles.length === 0) return [];
+        const fileURLsObj = {};
+        for (let i = 0; i < formData.files.length; i++) {
+            const questionFiles = formData.files[i];
+            if (questionFiles && questionFiles.length > 0) {
                 const urls = await Promise.all(questionFiles.map(async (file) => {
-                    if (typeof file === 'string') return file; // Zaten URL-dirsə (nadir hal)
+                    if (typeof file === 'string') return file;
                     const storage = getStorage();
                     const filePath = `uploads/${user.uid}/${Date.now()}_${file.name}`;
                     const storageRef = ref(storage, filePath);
                     await uploadBytes(storageRef, file);
                     return await getDownloadURL(storageRef);
                 }));
-                return urls;
-            })
-        );
+                fileURLsObj[i.toString()] = urls;
+            }
+        }
 
         const dataToSave = { ...formData };
         delete dataToSave.files;
-        dataToSave.fileURLs = fileURLs;
+        dataToSave.fileURLs = fileURLsObj;
 
         const finalData = {
             ...dataToSave,
