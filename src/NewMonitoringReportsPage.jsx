@@ -196,17 +196,28 @@ const NewMonitoringReportsPage = ({ user }) => {
       return sortConfig.direction === 'ascending' ? '▲' : '▼';
   }
   
-  const regionalIdareler = useMemo(() => [...new Set(kindergartens.map(kg => kg.regionalIdare).filter(Boolean))], [kindergartens]);
+  const regionalIdareler = useMemo(() => {
+    return [...new Set(allReports.map(r => r.regionalIdare).filter(Boolean))];
+  }, [allReports]);
+  
   const rayonlar = useMemo(() => {
-    if (selectedRegional === 'all') return [...new Set(kindergartens.map(kg => kg.rayon).filter(Boolean))];
-    return [...new Set(kindergartens.filter(kg => kg.regionalIdare === selectedRegional).map(kg => kg.rayon).filter(Boolean))];
-  }, [kindergartens, selectedRegional]);
+    let filteredReports = allReports;
+    if (selectedRegional !== 'all') {
+      filteredReports = filteredReports.filter(r => r.regionalIdare === selectedRegional);
+    }
+    return [...new Set(filteredReports.map(r => r.rayon).filter(Boolean))];
+  }, [allReports, selectedRegional]);
+  
   const mekteblerFilterList = useMemo(() => {
-    let filteredKgs = kindergartens;
-    if (selectedRegional !== 'all') filteredKgs = filteredKgs.filter(kg => kg.regionalIdare === selectedRegional);
-    if (selectedRayon !== 'all') filteredKgs = filteredKgs.filter(kg => kg.rayon === selectedRayon);
-    return filteredKgs;
-  }, [kindergartens, selectedRegional, selectedRayon]);
+    let filteredReports = allReports;
+    if (selectedRegional !== 'all') filteredReports = filteredReports.filter(r => r.regionalIdare === selectedRegional);
+    if (selectedRayon !== 'all') filteredReports = filteredReports.filter(r => r.rayon === selectedRayon);
+    const uniqueIds = [...new Set(filteredReports.map(r => r.bagcaId).filter(Boolean))];
+    return uniqueIds.map(id => ({ 
+        id, 
+        adi: kindergartens.find(k => k.id === id)?.adi || 'Bilinməyən' 
+    }));
+  }, [allReports, kindergartens, selectedRegional, selectedRayon]);
 
   if (loading) return <div className="loading-screen">Hesabatlar yüklənir...</div>;
   const handleExportToExcel = (dataToExport, fileName) => {
