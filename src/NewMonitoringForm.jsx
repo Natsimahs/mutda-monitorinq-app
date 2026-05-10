@@ -217,8 +217,6 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
     }
 
     setIsSubmitting(true);
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
 
     try {
         const fileURLs = await Promise.all(
@@ -227,7 +225,7 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
                 const urls = await Promise.all(questionFiles.map(async (file) => {
                     if (typeof file === 'string') return file; // Zaten URL-dirsə (nadir hal)
                     const storage = getStorage();
-                    const filePath = `uploads/${currentUser.uid}/${Date.now()}_${file.name}`;
+                    const filePath = `uploads/${user.uid}/${Date.now()}_${file.name}`;
                     const storageRef = ref(storage, filePath);
                     await uploadBytes(storageRef, file);
                     return await getDownloadURL(storageRef);
@@ -242,8 +240,8 @@ const NewMonitoringForm = ({ user, handleNavigate }) => {
 
         const finalData = {
             ...dataToSave,
-            authorId: currentUser.uid,
-            authorEmail: currentUser.email,
+            authorId: user.uid,
+            authorEmail: user.email,
             gonderilmeTarixi: new Date().toISOString(),
             gps: gpsData,
             monitorinqMuddeti: elapsedTime,
