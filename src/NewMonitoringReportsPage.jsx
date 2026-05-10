@@ -225,7 +225,13 @@ const NewMonitoringReportsPage = ({ user }) => {
         alert("İxrac etmək üçün məlumat yoxdur.");
         return;
     }
-    const dataForExcel = dataToExport.map(report => {
+    
+    // Excel üçün datanı ən yeni ən üstdə olmaqla (tarixə görə azalan) sıralayırıq
+    const sortedData = [...dataToExport].sort((a, b) => {
+        return new Date(b.gonderilmeTarixi) - new Date(a.gonderilmeTarixi);
+    });
+
+    const dataForExcel = sortedData.map(report => {
         let row = {
             'Tarix': new Date(report.gonderilmeTarixi).toLocaleDateString('az-AZ'),
             'Saat': new Date(report.gonderilmeTarixi).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }),
