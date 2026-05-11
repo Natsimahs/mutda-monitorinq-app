@@ -49,9 +49,10 @@ const NewMonitoringReportsPage = ({ user }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [visibleColumns, setVisibleColumns] = useState([
-    "Tarix", "Saat", "Risk", "Regional İdarə", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF", "Sil"
-  ]);
+  const [visibleColumns, setVisibleColumns] = useState(() => {
+    const base = ["Tarix", "Saat", "Risk", "Regional İdarə", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF"];
+    return user?.role === 'admin' ? [...base, "Sil"] : base;
+  });
   // Xəritə modalı üçün state
   const [mapOpen, setMapOpen] = useState(false);
 
