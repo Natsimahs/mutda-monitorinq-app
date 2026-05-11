@@ -60,6 +60,31 @@ const UserManagementPage = () => {
     }
   };
 
+  const handleDeleteUser = async (user) => {
+    const confirmed = window.confirm(
+      `"${user.fullName || user.email}" istifadəçisini sistemdən tamamilə silmək istəyirsiniz?\n\nBu əməliyyat GERİ ALINMAZ!`
+    );
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      const authInstance = getAuth();
+      const currentUser = authInstance.currentUser;
+      const token = currentUser ? await currentUser.getIdToken() : null;
+
+      const fn = httpsCallable(functions, "deleteUserByAdmin");
+      await fn({ uid: user.id, token });
+
+      setUsers(prev => prev.filter(u => u.id !== user.id));
+      alert(`"${user.email}" uğurla silindi.`);
+    } catch (err) {
+      console.error(err);
+      alert("Silmə zamanı xəta baş verdi: " + (err.message || ""));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleExcelUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -269,12 +294,15 @@ const UserManagementPage = () => {
                     {roles.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </td>
-                <td>
+                <td style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <button onClick={() => setEditingUser({
                     ...u,
                     assignedRegions: u.assignedRegions ? u.assignedRegions.join(', ') : ''
                   })} style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: '#3b82f6', color: 'white', border: 'none', borderRadius: '4px' }}>
                     Redaktə et
+                  </button>
+                  <button onClick={() => handleDeleteUser(u)} style={{ padding: '4px 8px', cursor: 'pointer', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '4px' }}>
+                    Sil
                   </button>
                 </td>
               </tr>

@@ -77,3 +77,28 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
 
   return { uid: userRecord.uid, email, role };
 });
+
+// Admin istifadəçini silir: Auth + Firestore users/{uid}
+exports.deleteUserByAdmin = functions.https.onCall(async (data, context) => {
+  await assertAdmin(data, context);
+
+  const uid = String(data?.uid || "").trim();
+  if (!uid) {
+    throw new functions.https.HttpsError("invalid-argument", "UID göndərilməyib.");
+  }
+
+  // Auth-dan sil
+  try {
+    await admin.auth().deleteUser(uid);
+  } catch (e) {
+    // Əgər Auth-da artıq yoxdursa, sadəcə keç
+    if (e.code !== "auth/user-not-found") {
+      throw new functions.https.HttpsError("internal", e.message);
+    }
+  }
+
+  // Firestore-dan sil
+  await admin.firestore().collection("users").doc(uid).delete();
+
+  return { success: true, uid };
+});
