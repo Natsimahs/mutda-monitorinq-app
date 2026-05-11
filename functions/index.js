@@ -9,33 +9,29 @@ const REPORT_DELETE_MASTER_PASSWORD = "202420252026";
 
 async function assertAdmin(data, context) {
   let callerUid = context?.auth?.uid;
-  console.log("assertAdmin started. context.auth.uid:", callerUid);
-  console.log("data.token present?:", !!data?.token);
 
+  // Əgər context.auth işləmirsə, manual token ilə yoxla
   if (!callerUid && data?.token) {
     try {
       const decoded = await admin.auth().verifyIdToken(data.token);
       callerUid = decoded.uid;
-      console.log("Token verified successfully. UID:", callerUid);
     } catch (e) {
-      console.error("Token verification failed:", e);
-      throw new functions.https.HttpsError("unauthenticated", "Təqdim edilən token etibarsızdır.");
+      throw new functions.https.HttpsError("unauthenticated", "Token etibarsızdır.");
     }
   }
 
   if (!callerUid) {
-    console.error("No callerUid found. Throwing Login olunmayib.");
     throw new functions.https.HttpsError("unauthenticated", "Login olunmayıb.");
   }
 
   const callerDoc = await admin.firestore().collection("users").doc(callerUid).get();
   const role = callerDoc.exists ? callerDoc.data().role : null;
-  console.log("Caller role:", role);
 
   if (role !== "admin") {
-    console.error("Caller is not admin. Role is:", role);
     throw new functions.https.HttpsError("permission-denied", "Yalnız admin icazəlidir.");
   }
+
+  return callerUid;
 }
 
 // Admin yeni user yaradır: Auth + Firestore users/{uid}
