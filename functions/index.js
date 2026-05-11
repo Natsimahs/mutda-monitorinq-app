@@ -3,12 +3,22 @@ const admin = require("firebase-admin");
 
 admin.initializeApp();
 
-async function assertAdmin(context) {
-  if (!context.auth) {
+async function assertAdmin(data, context) {
+  let callerUid = context?.auth?.uid;
+
+  if (!callerUid && data?.token) {
+    try {
+      const decoded = await admin.auth().verifyIdToken(data.token);
+      callerUid = decoded.uid;
+    } catch (e) {
+      throw new functions.https.HttpsError("unauthenticated", "Təqdim edilən token etibarsızdır.");
+    }
+  }
+
+  if (!callerUid) {
     throw new functions.https.HttpsError("unauthenticated", "Login olunmayıb.");
   }
 
-  const callerUid = context.auth.uid;
   const callerDoc = await admin.firestore().collection("users").doc(callerUid).get();
   const role = callerDoc.exists ? callerDoc.data().role : null;
 
@@ -19,7 +29,7 @@ async function assertAdmin(context) {
 
 // Admin yeni user yaradır: Auth + Firestore users/{uid}
 exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
-  await assertAdmin(context);
+  await assertAdmin(data, context);
 
   const email = String(data?.email || "").trim().toLowerCase();
   const password = String(data?.password || "").trim();

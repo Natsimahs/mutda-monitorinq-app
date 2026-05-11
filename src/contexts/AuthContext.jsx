@@ -28,9 +28,9 @@ export const AuthProvider = ({ children }) => {
 
             if (!role) {
                 // Sənəd var, amma rol boşdur
-                setUser({ ...firebaseUser, role: 'none', email: finalEmail });
+                setUser({ ...firebaseUser, ...userDocSnap.data(), role: 'none', email: finalEmail });
             } else {
-                setUser({ ...firebaseUser, role, email: finalEmail });
+                setUser({ ...firebaseUser, ...userDocSnap.data(), role, email: finalEmail });
             }
           } else {
             // TƏHLÜKƏSİZLİK YAMASI: Artıq frontend özünə rol YAZMIR.

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { collection, getDocs, doc, updateDoc, getDoc, query, where, setDoc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "./firebase";
 import * as xlsx from 'xlsx';
@@ -114,8 +115,12 @@ const UserManagementPage = () => {
              updatedCount++;
           } else {
              // Yeni istifadəçi yarat
+             const authInstance = getAuth();
+             const currentUser = authInstance.currentUser;
+             const token = currentUser ? await currentUser.getIdToken() : null;
+
              const fn = httpsCallable(functions, "createUserByAdmin");
-             const res = await fn({ email, password, role });
+             const res = await fn({ email, password, role, token });
              
              let uid = res?.data?.uid;
              if (!uid) {
