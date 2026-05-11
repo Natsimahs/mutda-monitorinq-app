@@ -34,7 +34,12 @@ const NewMonitoringDetailModal = ({ report, kindergartenName, onClose }) => {
             <h4>Monitorinq Sualları</h4>
             {report.answers.map((answer, index) => (
               <div key={index} className="modal-question">
-                <p><strong>{index + 1}. {monitoringQuestions[index]}:</strong> <span className={`answer-${answer}`}>{answer || 'Cavablanmayıb'}</span></p>
+                <p><strong>{index + 1}. {monitoringQuestions[index]}:</strong>{' '}
+                  <span className={
+                    index === 7
+                      ? (answer === 'Bəli' ? 'answer-Xeyr' : answer === 'Xeyr' ? 'answer-Bəli' : `answer-${answer}`)
+                      : `answer-${answer}`
+                  }>{answer || 'Cavablanmayıb'}</span></p>
                 {report.notes[index] && <p className="modal-note"><strong>Qeyd:</strong> {report.notes[index]}</p>}
                 {report.fileURLs && (
                   Array.isArray(report.fileURLs) ? (
