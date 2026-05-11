@@ -1,0 +1,55 @@
+const xlsx = require("xlsx");
+const path = require("path");
+
+const headers = [
+  "A - Regionlar (vergüllə)",
+  "B - Ad Soyad",
+  "C - Vəzifə",
+  "D - Email (məcburi)",
+  "E - Şifrə (boş qoysanız Mutda2025! olacaq)",
+  "F - Rol (mtm_user / admin / subadmin)",
+  "G - Görmə Səlahiyyəti (own / region / all)",
+];
+
+const exampleRows = [
+  [
+    "Bakı Şəhəri üzrə Təhsil İdarəsi",
+    "Əli Əliyev",
+    "Metodist",
+    "ali.aliyev@bakuedu.info",
+    "Sifre123!",
+    "mtm_user",
+    "own",
+  ],
+  [
+    "Şirvan-Salyan Regional Təhsil İdarəsi, Quba-Xaçmaz Regional Təhsil İdarəsi",
+    "Aytən Hüseynova",
+    "Mütəxəssis",
+    "ayten.huseynova@edu.info",
+    "Sifre456!",
+    "mtm_user",
+    "region",
+  ],
+];
+
+const wb = xlsx.utils.book_new();
+const wsData = [headers, ...exampleRows];
+const ws = xlsx.utils.aoa_to_sheet(wsData);
+
+// Sütun genişliklərini tənzimlə
+ws["!cols"] = [
+  { wch: 55 }, // A
+  { wch: 25 }, // B
+  { wch: 20 }, // C
+  { wch: 35 }, // D
+  { wch: 30 }, // E
+  { wch: 15 }, // F
+  { wch: 15 }, // G
+];
+
+xlsx.utils.book_append_sheet(wb, ws, "İstifadəçilər");
+
+const outPath = path.join(__dirname, "users_import.xlsx");
+xlsx.writeFile(wb, outPath);
+console.log("✅ Şablon Excel yaradıldı:", outPath);
+console.log("Faylı açıb nümunə sətirləri silin və öz məlumatlarınızı yazın.");
