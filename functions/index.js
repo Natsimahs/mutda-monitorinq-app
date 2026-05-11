@@ -1,3 +1,4 @@
+// Force redeploy - Update 3
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
@@ -5,30 +6,38 @@ admin.initializeApp();
 
 async function assertAdmin(data, context) {
   let callerUid = context?.auth?.uid;
+  console.log("assertAdmin started. context.auth.uid:", callerUid);
+  console.log("data.token present?:", !!data?.token);
 
   if (!callerUid && data?.token) {
     try {
       const decoded = await admin.auth().verifyIdToken(data.token);
       callerUid = decoded.uid;
+      console.log("Token verified successfully. UID:", callerUid);
     } catch (e) {
+      console.error("Token verification failed:", e);
       throw new functions.https.HttpsError("unauthenticated", "Təqdim edilən token etibarsızdır.");
     }
   }
 
   if (!callerUid) {
+    console.error("No callerUid found. Throwing Login olunmayib.");
     throw new functions.https.HttpsError("unauthenticated", "Login olunmayıb.");
   }
 
   const callerDoc = await admin.firestore().collection("users").doc(callerUid).get();
   const role = callerDoc.exists ? callerDoc.data().role : null;
+  console.log("Caller role:", role);
 
   if (role !== "admin") {
+    console.error("Caller is not admin. Role is:", role);
     throw new functions.https.HttpsError("permission-denied", "Yalnız admin icazəlidir.");
   }
 }
 
 // Admin yeni user yaradır: Auth + Firestore users/{uid}
 exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
+  console.log("createUserByAdmin triggered. Data:", JSON.stringify({ email: data?.email, role: data?.role }));
   await assertAdmin(data, context);
 
   const email = String(data?.email || "").trim().toLowerCase();
