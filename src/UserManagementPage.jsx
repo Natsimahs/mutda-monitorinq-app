@@ -77,47 +77,69 @@ const UserManagementPage = () => {
       const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
 
       // A: Region, B: Ad Soyad, C: Vəzifə, D: Email, E: Şifrə
-      const newUsers = jsonData.slice(1).filter(row => row[3] && row[4]);
+      const newUsers = jsonData.slice(1).filter(row => row[3]);
 
       let successCount = 0;
       let errorCount = 0;
+      let updatedCount = 0;
+
+      // Mövcud istifadəçiləri yoxlamaq üçün bazanı çəkirik
+      const qs = await getDocs(collection(db, "users"));
+      const existingUsersMap = new Map();
+      qs.docs.forEach(doc => {
+         const data = doc.data();
+         if (data.email) existingUsersMap.set(data.email.toLowerCase(), doc.id);
+      });
 
       for (const row of newUsers) {
         const assignedRegions = row[0] ? row[0].split(',').map(s => s.trim()) : [];
         const fullName = row[1] || "";
         const position = row[2] || "";
         const email = String(row[3]).trim().toLowerCase();
-        const password = String(row[4]).trim();
+        const password = row[4] ? String(row[4]).trim() : "123456"; // Default şifrə
         const role = "mtm_user"; 
         const viewScope = "own";
 
         try {
-          const fn = httpsCallable(functions, "createUserByAdmin");
-          const res = await fn({ email, password, role });
-          
-          let uid = res?.data?.uid;
-          
-          if (!uid) {
-             const q = query(collection(db, "users"), where("email", "==", email));
-             const qs = await getDocs(q);
-             if (!qs.empty) {
-               uid = qs.docs[0].id;
-             }
-          }
+          const existingUid = existingUsersMap.get(email);
 
-          if (uid) {
-            await setDoc(doc(db, "users", uid), {
-              email,
-              role,
-              fullName,
-              position,
-              assignedRegions,
-              viewScope,
-              isFirstLogin: true
-            }, { merge: true });
-            successCount++;
+          if (existingUid) {
+             // İstifadəçi mövcuddur, yalnız datanı yeniləyirik
+             await setDoc(doc(db, "users", existingUid), {
+               fullName,
+               position,
+               assignedRegions,
+               viewScope: viewScope // mövcudları 'own' kimi yeniləyir və ya köhnəni qoruya bilərik
+             }, { merge: true });
+             updatedCount++;
           } else {
-             errorCount++;
+             // Yeni istifadəçi yarat
+             const fn = httpsCallable(functions, "createUserByAdmin");
+             const res = await fn({ email, password, role });
+             
+             let uid = res?.data?.uid;
+             if (!uid) {
+                const q = query(collection(db, "users"), where("email", "==", email));
+                const qsQuery = await getDocs(q);
+                if (!qsQuery.empty) {
+                  uid = qsQuery.docs[0].id;
+                }
+             }
+
+             if (uid) {
+               await setDoc(doc(db, "users", uid), {
+                 email,
+                 role,
+                 fullName,
+                 position,
+                 assignedRegions,
+                 viewScope,
+                 isFirstLogin: true
+               }, { merge: true });
+               successCount++;
+             } else {
+                errorCount++;
+             }
           }
         } catch(err) {
           console.error("İmport xətası:", email, err);
@@ -125,7 +147,7 @@ const UserManagementPage = () => {
         }
       }
 
-      alert(`Yükləmə tamamlandı!\nUğurlu: ${successCount}\nXəta: ${errorCount}`);
+      alert(`Yükləmə tamamlandı!\nYeni yaradılan: ${successCount}\nYenilənən: ${updatedCount}\nXəta: ${errorCount}`);
       await fetchUsers();
     } catch (error) {
       console.error("Excel xətası:", error);

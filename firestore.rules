@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // İstifadəçilər üçün qaydalar
+    match /users/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // users siyahısını yalnız admin görsün
+    match /users/{document=**} {
+      allow list: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Monitorinq hesabatları üçün qaydalar (köhnə modul)
+    match /monitorinqHesabatlari/{reportId} {
+      allow create: if request.auth != null;
+      allow read: if 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'] ||
+          (resource.data.authorId == request.auth.uid);
+      allow update, delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Admin Paneli üçün qaydalar
+    match /bagcalar/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /qruplar/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    match /usaqlar/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Davamiyyət Jurnalı üçün qaydalar
+    match /davamiyyet/{docId} {
+      allow read, write: if request.auth != null; 
+      allow delete: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // Yeni Monitorinq Hesabatları üçün qaydalar (bağça)
+    // Təkmilləşdirilmiş viewScope və assignedRegions məntiqi ilə!
+    match /newMonitorinqHesabatlari/{docId} {
+      allow create: if request.auth != null &&
+                    request.resource.data.authorId == request.auth.uid;
+
+      allow get, list: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'] ||
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.viewScope == 'all' ||
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.viewScope == 'region' && resource.data.regionalIdare in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.assignedRegions) ||
+        resource.data.authorId == request.auth.uid ||
+        resource.data.authorEmail == request.auth.token.email
+      );
+
+      allow update: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+
+      allow delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+    }
+    
+    // Məktəblər siyahısı üçün
+    match /mektebler/{docId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Məktəb monitorinq hesabatları üçün qaydalar
+    match /newMektebMonitorinqHesabatlari/{docId} {
+      allow create: if request.auth != null;
+      allow get, list: if request.auth != null && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'] ||
+        resource.data.authorId == request.auth.uid
+      );
+      allow update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+    }
+    
+    match /settings/{docId} {
+      allow read: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      allow create, update, delete: if request.auth != null &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+  }
+}

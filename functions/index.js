@@ -31,8 +31,8 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
   if (!password || password.length < 6) {
     throw new functions.https.HttpsError("invalid-argument", "Parol ən azı 6 simvol olmalıdır.");
   }
-  if (!["admin", "subadmin", "istifadəçi"].includes(role)) {
-    throw new functions.https.HttpsError("invalid-argument", "Rol düzgün deyil.");
+  if (!["admin", "subadmin", "istifadəçi", "mtm_user", "school_user", "mekteb_monitor"].includes(role)) {
+    throw new functions.https.HttpsError("invalid-argument", "Rol düzgün deyil: " + role);
   }
 
   let userRecord;
