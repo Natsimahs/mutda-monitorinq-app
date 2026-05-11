@@ -1,14 +1,16 @@
 // src/NewMonitoringReportsPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
-import { db, auth, functions } from './firebase';
+import { collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
+import { db } from './firebase';
 import * as XLSX from 'xlsx';
 import NewMonitoringDetailModal from './NewMonitoringDetailModal.jsx';
 import AktPDFModal from './AktPDFModal.jsx';
 import monitoringQuestions from './monitoringQuestions';
 import { useFilteredReports } from './hooks/useFilteredReports';
 import MapModal from './MapModal.jsx';
+
+// Master şifrə — Firestore Rules (server) + admin rolu ilə qorunur
+const MASTER_PASSWORD = '202420252026';
 
 function getRiskLevel(report) {
   let negativeCount = 0;
@@ -197,29 +199,20 @@ const NewMonitoringReportsPage = ({ user }) => {
   ];
 
   const handleDeleteReport = async () => {
+    // Şifrə yoxlanması (Firestore Rules server tərəfindən admin rolunu yoxlayır)
+    if (deletePassword !== MASTER_PASSWORD) {
+      setDeleteError('Master şifrə yanlışdır!');
+      return;
+    }
     try {
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        setDeleteError('Sessiya bitib. Zəhmət olmasa yenidən daxil olun.');
-        return;
-      }
-      const token = await currentUser.getIdToken(true); // force refresh
-
-      const fn = httpsCallable(functions, 'deleteReportByAdmin');
-      await fn({
-        reportId: deleteModal.report.id,
-        password: deletePassword,
-        collection: 'newMonitorinqHesabatlari',
-        token,
-      });
-
+      await deleteDoc(doc(db, 'newMonitorinqHesabatlari', deleteModal.report.id));
       setAllReports(prev => prev.filter(r => r.id !== deleteModal.report.id));
       setDeleteModal({ open: false, report: null });
       setDeletePassword('');
       setDeleteError('');
     } catch (err) {
       console.error(err);
-      const msg = err?.details || err?.message || 'Silmə zamanı xəta baş verdi.';
+      const msg = err?.message || 'Silmə zamanı xəta baş verdi.';
       setDeleteError(msg);
     }
   };
