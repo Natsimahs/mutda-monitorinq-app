@@ -49,7 +49,7 @@ const NewMonitoringReportsPage = ({ user }) => {
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [visibleColumns, setVisibleColumns] = useState([
-    "Tarix", "Saat", "Risk", "Regional İdarə", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF"
+    "Tarix", "Saat", "Risk", "Regional İdarə", "Rayon", "Müəssisə", "Əməkdaş", "Ətraflı", "PDF", "Sil"
   ]);
   // Xəritə modalı üçün state
   const [mapOpen, setMapOpen] = useState(false);
