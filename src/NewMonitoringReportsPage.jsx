@@ -1,6 +1,6 @@
 // src/NewMonitoringReportsPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import * as XLSX from 'xlsx';
 import NewMonitoringDetailModal from './NewMonitoringDetailModal.jsx';
@@ -8,6 +8,7 @@ import AktPDFModal from './AktPDFModal.jsx';
 import monitoringQuestions from './monitoringQuestions';
 import { useFilteredReports } from './hooks/useFilteredReports';
 import MapModal from './MapModal.jsx';
+import { REPORT_DELETE_PASSWORD } from './config/masterPassword.js';
 
 function getRiskLevel(report) {
   let negativeCount = 0;
@@ -39,6 +40,10 @@ const NewMonitoringReportsPage = ({ user }) => {
   const [sortConfig, setSortConfig] = useState({ key: 'gonderilmeTarixi', direction: 'descending' });
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedReportForAkt, setSelectedReportForAkt] = useState(null);
+  // Silmə modalı üçün state
+  const [deleteModal, setDeleteModal] = useState({ open: false, report: null });
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   // Yeni filtrləmə və axtarış state-ləri
   const [searchTerm, setSearchTerm] = useState("");
   const [showCriticalOnly, setShowCriticalOnly] = useState(false);
@@ -186,8 +191,26 @@ const NewMonitoringReportsPage = ({ user }) => {
     { key: "Müəssisə", title: "Müəssisə" },
     { key: "Əməkdaş", title: "Əməkdaş" },
     { key: "Ətraflı", title: "Ətraflı" },
-    { key: "PDF", title: "PDF" }
+    { key: "PDF", title: "PDF" },
+    ...(user?.role === 'admin' ? [{ key: "Sil", title: "Sil" }] : [])
   ];
+
+  const handleDeleteReport = async () => {
+    if (deletePassword !== REPORT_DELETE_PASSWORD) {
+      setDeleteError('Master şifrə yanlışdır!');
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, 'newMonitorinqHesabatlari', deleteModal.report.id));
+      setAllReports(prev => prev.filter(r => r.id !== deleteModal.report.id));
+      setDeleteModal({ open: false, report: null });
+      setDeletePassword('');
+      setDeleteError('');
+    } catch (err) {
+      console.error(err);
+      setDeleteError('Silmə zamanı xəta baş verdi.');
+    }
+  };
 
   function handleColumnToggle(columnKey) {
     setVisibleColumns((prev) =>
@@ -391,6 +414,21 @@ const NewMonitoringReportsPage = ({ user }) => {
                     {visibleColumns.includes("PDF") && (
                       <td><button className="details-button pdf-button" onClick={() => setSelectedReportForAkt(report)}>PDF</button></td>
                     )}
+                    {visibleColumns.includes("Sil") && (
+                      <td>
+                        <button
+                          className="details-button"
+                          style={{ backgroundColor: '#ef4444', color: 'white' }}
+                          onClick={() => {
+                            setDeleteModal({ open: true, report });
+                            setDeletePassword('');
+                            setDeleteError('');
+                          }}
+                        >
+                          Sil
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))
               ) : (
@@ -428,6 +466,69 @@ const NewMonitoringReportsPage = ({ user }) => {
       )}
       {mapOpen && (
         <MapModal gpsList={gpsList} onClose={() => setMapOpen(false)} />
+      )}
+
+      {/* Master Şifrə ilə Silmə Dialoqu */}
+      {deleteModal.open && (
+        <div className="sidebar-overlay" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{
+            backgroundColor: 'white', padding: '30px', borderRadius: '12px',
+            width: '420px', maxWidth: '92%', boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔐</div>
+              <h3 style={{ margin: 0, color: '#1e293b' }}>Hesabatı Sil</h3>
+              <p style={{ margin: '8px 0 0', color: '#64748b', fontSize: '0.9rem' }}>
+                <strong>{getKindergartenNameById(deleteModal.report?.bagcaId)}</strong> müəssisəsinin
+                {deleteModal.report?.gonderilmeTarixi && ` ${new Date(deleteModal.report.gonderilmeTarixi).toLocaleDateString('az-AZ')} tarixli`} hesabatı silinəcək.
+                Bu əməliyyat <strong style={{ color: '#ef4444' }}>GERİ ALINMAZ</strong>!
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: '8px', color: '#374151' }}>
+                Hesabatı silmək üçün master şifrəni daxil edin:
+              </label>
+              <input
+                type="password"
+                value={deletePassword}
+                onChange={e => { setDeletePassword(e.target.value); setDeleteError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleDeleteReport()}
+                placeholder="Master şifrə..."
+                autoFocus
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '6px',
+                  border: deleteError ? '2px solid #ef4444' : '1px solid #d1d5db',
+                  fontSize: '1rem', outline: 'none', boxSizing: 'border-box'
+                }}
+              />
+              {deleteError && (
+                <p style={{ margin: '6px 0 0', color: '#ef4444', fontSize: '0.85rem' }}>❌ {deleteError}</p>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => { setDeleteModal({ open: false, report: null }); setDeletePassword(''); setDeleteError(''); }}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db',
+                  backgroundColor: 'white', cursor: 'pointer', fontWeight: 500
+                }}
+              >
+                ← Geri
+              </button>
+              <button
+                onClick={handleDeleteReport}
+                style={{
+                  flex: 1, padding: '10px', borderRadius: '6px', border: 'none',
+                  backgroundColor: '#ef4444', color: 'white', cursor: 'pointer', fontWeight: 600
+                }}
+              >
+                Hesabatı Sil
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

@@ -62,8 +62,8 @@ service cloud.firestore {
       allow update: if request.auth != null &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
 
-      allow delete: if request.auth != null &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'subadmin'];
+      // Silmə: master şifrə frontend-də yoxlanılır, buna görə login olan hər kəsə icazə verilir
+      allow delete: if request.auth != null;
     }
     
     // Məktəblər siyahısı üçün
