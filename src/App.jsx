@@ -13,6 +13,7 @@ import AdminManagementPage from './AdminManagementPage.jsx';
 import AttendancePage from './AttendancePage.jsx';
 import AttendanceReportsPage from './AttendanceReportsPage.jsx';
 import UserManagementPage from './UserManagementPage.jsx';
+import ProfilePage from './ProfilePage.jsx';
 
 import SchoolMonitoringForm from './school/SchoolMonitoringForm.jsx';
 import SchoolMonitoringReportsPage from './school/SchoolMonitoringReportsPage.jsx';
@@ -77,6 +78,9 @@ const AppRoutes = () => {
               <UserManagementPage />
             </ProtectedRoute>
           } />
+
+          {/* Şəxsi Profil Səhifəsi */}
+          <Route path="profile" element={<ProfilePage user={user} />} />
           
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -57,14 +57,26 @@ const NewMonitoringReportsPage = ({ user }) => {
         const kgSnapshot = await getDocs(collection(db, "bagcalar"));
         setKindergartens(kgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
-        // Reportlar: admin hamısını, digəri yalnız öz yazdıqlarını görür
+        // Reportlar: admin və ya viewScope === 'all' hamısını görür
         const reportsCol = collection(db, "newMonitorinqHesabatlari");
 
-        if (user?.role === 'admin') {
+        if (user?.role === 'admin' || user?.viewScope === 'all') {
           const reportSnapshot = await getDocs(reportsCol);
           setAllReports(reportSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        } else if (user?.viewScope === 'region' && user?.assignedRegions?.length > 0) {
+          // Regionlara görə axtarış (Firestore 'in' limiti 10-dur, buna görə chunk edirik)
+          const regions = user.assignedRegions;
+          const merged = new Map();
+          
+          for (let i = 0; i < regions.length; i += 10) {
+            const chunk = regions.slice(i, i + 10);
+            const q = query(reportsCol, where('regionalIdare', 'in', chunk));
+            const snap = await getDocs(q);
+            snap.forEach(d => merged.set(d.id, { id: d.id, ...d.data() }));
+          }
+          setAllReports(Array.from(merged.values()));
         } else {
-          // Fərqli dövrlərdə fərqli sahələr istifadə oluna bildiyi üçün bir neçə sorğunu birləşdiririk
+          // viewScope === 'own' və ya default: Yalnız öz yazdıqlarını görür
           const uid = user?.uid || '';
           const emailRaw = (user?.email || '').trim();
           const emailLower = emailRaw.toLowerCase();

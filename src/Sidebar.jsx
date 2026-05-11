@@ -28,8 +28,8 @@ const Sidebar = ({ user, handleLogout, isOpen, toggleSidebar }) => {
         </div>
 
         <div className="sidebar-user-info">
-          <p className="user-email">{user.email}</p>
-          <span className="user-role-badge">{user.role}</span>
+          <p className="user-email">{user.fullName ? `İstifadəçi: ${user.fullName}` : user.email}</p>
+          <span className="user-role-badge">{user.position ? `Vəzifə: ${user.position}` : user.role}</span>
         </div>
 
         <nav className="sidebar-nav">
@@ -85,6 +85,13 @@ const Sidebar = ({ user, handleLogout, isOpen, toggleSidebar }) => {
               </NavLink>
             </div>
           )}
+
+          <div className="nav-group">
+            <p className="nav-group-title">Profil</p>
+            <NavLink to="/profile" onClick={toggleSidebar} className={({ isActive }) => isActive ? "nav-item active" : "nav-item"}>
+              <Ikonlar.Tenzimleme /> Mənim Profilim
+            </NavLink>
+          </div>
         </nav>
 
         <div className="sidebar-footer">

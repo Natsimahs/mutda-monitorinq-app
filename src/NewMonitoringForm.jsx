@@ -12,10 +12,24 @@ import { useNavigate } from 'react-router-dom';
 import monitoringQuestions from './monitoringQuestions';
 
 // Komponentlər hər addım üçün (əvvəlki kimi)
-const Step1 = ({ data, setData, kindergartens }) => {
-  const regionalIdareler = [...new Set(kindergartens.map(kg => kg.regionalIdare).filter(Boolean))];
+const Step1 = ({ data, setData, kindergartens, user }) => {
+  const allRegions = [...new Set(kindergartens.map(kg => kg.regionalIdare).filter(Boolean))];
+  
+  // Səlahiyyətə görə filter (admin deyilsə və assignedRegions varsa)
+  let regionalIdareler = allRegions;
+  if (user && user.role !== 'admin' && user.assignedRegions && user.assignedRegions.length > 0) {
+     regionalIdareler = allRegions.filter(r => user.assignedRegions.includes(r));
+  }
+
   const rayonlar = [...new Set(kindergartens.filter(kg => kg.regionalIdare === data.regionalIdare).map(kg => kg.rayon).filter(Boolean))];
   const bagcalarInRayon = kindergartens.filter(kg => kg.regionalIdare === data.regionalIdare && kg.rayon === data.rayon);
+  
+  // Avtomatik seçim (əgər cəmi 1 regionu varsa)
+  useEffect(() => {
+    if (regionalIdareler.length === 1 && !data.regionalIdare) {
+      setData(prev => ({ ...prev, regionalIdare: regionalIdareler[0] }));
+    }
+  }, [regionalIdareler, data.regionalIdare, setData]);
   
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -277,11 +291,11 @@ const NewMonitoringForm = ({ user }) => {
 
   const renderStep = () => {
     switch (currentStep) {
-      case 1: return <Step1 data={formData} setData={setFormData} kindergartens={kindergartens} />;
+      case 1: return <Step1 data={formData} setData={setFormData} kindergartens={kindergartens} user={user} />;
       case 2: return <Step2 data={formData} setData={setFormData} />;
       case 3: return <Step3 data={formData} setData={setFormData} onFileChange={handleFileChange} />;
       case 4: return <Step4 data={formData} onSignatureChange={handleSignatureChange} />;
-      default: return <Step1 data={formData} setData={setFormData} kindergartens={kindergartens} />;
+      default: return <Step1 data={formData} setData={setFormData} kindergartens={kindergartens} user={user} />;
     }
   };
 
