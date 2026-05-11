@@ -1,14 +1,15 @@
 // src/NewMonitoringReportsPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { collection, getDocs, query, where, doc, deleteDoc } from 'firebase/firestore';
-import { db } from './firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+import { httpsCallable } from 'firebase/functions';
+import { db, functions } from './firebase';
 import * as XLSX from 'xlsx';
 import NewMonitoringDetailModal from './NewMonitoringDetailModal.jsx';
 import AktPDFModal from './AktPDFModal.jsx';
 import monitoringQuestions from './monitoringQuestions';
 import { useFilteredReports } from './hooks/useFilteredReports';
 import MapModal from './MapModal.jsx';
-import { REPORT_DELETE_PASSWORD } from './config/masterPassword.js';
 
 function getRiskLevel(report) {
   let negativeCount = 0;
@@ -196,19 +197,28 @@ const NewMonitoringReportsPage = ({ user }) => {
   ];
 
   const handleDeleteReport = async () => {
-    if (deletePassword !== REPORT_DELETE_PASSWORD) {
-      setDeleteError('Master şifrə yanlışdır!');
-      return;
-    }
     try {
-      await deleteDoc(doc(db, 'newMonitorinqHesabatlari', deleteModal.report.id));
+      const authInstance = getAuth();
+      const currentUser = authInstance.currentUser;
+      const token = currentUser ? await currentUser.getIdToken() : null;
+
+      const fn = httpsCallable(functions, 'deleteReportByAdmin');
+      await fn({
+        reportId: deleteModal.report.id,
+        password: deletePassword,
+        collection: 'newMonitorinqHesabatlari',
+        token,
+      });
+
       setAllReports(prev => prev.filter(r => r.id !== deleteModal.report.id));
       setDeleteModal({ open: false, report: null });
       setDeletePassword('');
       setDeleteError('');
     } catch (err) {
       console.error(err);
-      setDeleteError('Silmə zamanı xəta baş verdi.');
+      // Cloud Function-dan gələn xəta mesajını göstər
+      const msg = err?.details || err?.message || 'Silmə zamanı xəta baş verdi.';
+      setDeleteError(msg);
     }
   };
 

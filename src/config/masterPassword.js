@@ -1,5 +1,3 @@
-// Bu faylda hesabatların silinməsi üçün master şifrə saxlanılır.
-// Şifrəni yalnız bu fayldan dəyişmək olar.
-// Heç vaxt bu faylı ictimaiyyətə açmayın!
-
-export const REPORT_DELETE_PASSWORD = "202420252026";
+// Bu fayl köhnəlmişdir.
+// Master şifrə artıq Cloud Function (functions/index.js) tərəfindən server tərəfindən idarə olunur.
+// Bu fayl silinə bilər.

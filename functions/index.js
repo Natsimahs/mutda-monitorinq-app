@@ -1,8 +1,11 @@
-// Force redeploy - Update 3
+// Force redeploy - Update 4
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
 admin.initializeApp();
+
+// Master şifrə yalnız burada — server tərəfindədir, frontend-ə çatmır
+const REPORT_DELETE_MASTER_PASSWORD = "202420252026";
 
 async function assertAdmin(data, context) {
   let callerUid = context?.auth?.uid;
@@ -101,4 +104,30 @@ exports.deleteUserByAdmin = functions.https.onCall(async (data, context) => {
   await admin.firestore().collection("users").doc(uid).delete();
 
   return { success: true, uid };
+});
+
+// Hesabatı master şifrə ilə silir — şifrə yalnız server tərəfindədir
+exports.deleteReportByAdmin = functions.https.onCall(async (data, context) => {
+  await assertAdmin(data, context);
+
+  const reportId = String(data?.reportId || "").trim();
+  const password = String(data?.password || "").trim();
+  const col = String(data?.collection || "newMonitorinqHesabatlari").trim();
+
+  if (!reportId) {
+    throw new functions.https.HttpsError("invalid-argument", "Report ID göndərilməyib.");
+  }
+
+  if (password !== REPORT_DELETE_MASTER_PASSWORD) {
+    throw new functions.https.HttpsError("permission-denied", "Master şifrə yanlışdır!");
+  }
+
+  const allowedCollections = ["newMonitorinqHesabatlari", "newMektebMonitorinqHesabatlari"];
+  if (!allowedCollections.includes(col)) {
+    throw new functions.https.HttpsError("invalid-argument", "Etibarsız kolleksiya.");
+  }
+
+  await admin.firestore().collection(col).doc(reportId).delete();
+
+  return { success: true, reportId };
 });
