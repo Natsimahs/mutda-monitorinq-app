@@ -1,9 +1,8 @@
 // src/NewMonitoringReportsPage.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 import { httpsCallable } from 'firebase/functions';
-import { db, functions } from './firebase';
+import { db, auth, functions } from './firebase';
 import * as XLSX from 'xlsx';
 import NewMonitoringDetailModal from './NewMonitoringDetailModal.jsx';
 import AktPDFModal from './AktPDFModal.jsx';
@@ -199,9 +198,12 @@ const NewMonitoringReportsPage = ({ user }) => {
 
   const handleDeleteReport = async () => {
     try {
-      const authInstance = getAuth();
-      const currentUser = authInstance.currentUser;
-      const token = currentUser ? await currentUser.getIdToken() : null;
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setDeleteError('Sessiya bitib. Zəhmət olmasa yenidən daxil olun.');
+        return;
+      }
+      const token = await currentUser.getIdToken(true); // force refresh
 
       const fn = httpsCallable(functions, 'deleteReportByAdmin');
       await fn({
@@ -217,7 +219,6 @@ const NewMonitoringReportsPage = ({ user }) => {
       setDeleteError('');
     } catch (err) {
       console.error(err);
-      // Cloud Function-dan gələn xəta mesajını göstər
       const msg = err?.details || err?.message || 'Silmə zamanı xəta baş verdi.';
       setDeleteError(msg);
     }
