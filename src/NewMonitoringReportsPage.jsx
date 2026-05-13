@@ -33,6 +33,7 @@ const pageSize = 20;
 const NewMonitoringReportsPage = ({ user }) => {
   const [allReports, setAllReports] = useState([]);
   const [kindergartens, setKindergartens] = useState([]);
+  const [usersMap, setUsersMap] = useState({}); // uid -> fullName
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -64,6 +65,15 @@ const NewMonitoringReportsPage = ({ user }) => {
         // Bağçalar
         const kgSnapshot = await getDocs(collection(db, "bagcalar"));
         setKindergartens(kgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+        // İstifadəçilər xəritəsi: uid -> fullName
+        const usersSnapshot = await getDocs(collection(db, "users"));
+        const map = {};
+        usersSnapshot.forEach(d => {
+          const data = d.data();
+          if (data.fullName) map[d.id] = data.fullName;
+        });
+        setUsersMap(map);
 
         // Reportlar: admin və ya viewScope === 'all' hamısını görür
         const reportsCol = collection(db, "newMonitorinqHesabatlari");
@@ -113,6 +123,9 @@ const NewMonitoringReportsPage = ({ user }) => {
   }, [user]);
 
   const getKindergartenNameById = (id) => kindergartens.find(k => k.id === id)?.adi || 'Bilinməyən';
+  // authorId vasitəsilə adı tap, tapılmazsa email göstər
+  const getUserDisplayName = (report) =>
+    usersMap[report.authorId] || report.authorEmail || '—';
 
   // Mövcud filterlərə search və kritiklik filtri əlavə olundu
   const filteredByDateAndHierarchy = useMemo(() => {
@@ -412,7 +425,7 @@ const NewMonitoringReportsPage = ({ user }) => {
                     {visibleColumns.includes("Regional İdarə") && <td>{report.regionalIdare}</td>}
                     {visibleColumns.includes("Rayon") && <td>{report.rayon}</td>}
                     {visibleColumns.includes("Müəssisə") && <td>{getKindergartenNameById(report.bagcaId)}</td>}
-                    {visibleColumns.includes("Əməkdaş") && <td>{report.authorEmail}</td>}
+                    {visibleColumns.includes("Əməkdaş") && <td>{getUserDisplayName(report)}</td>}
                     {visibleColumns.includes("Ətraflı") && (
                       <td><button className="details-button" onClick={() => setSelectedReport(report)}>Bax</button></td>
                     )}
