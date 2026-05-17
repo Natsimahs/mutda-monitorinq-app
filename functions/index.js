@@ -7,13 +7,30 @@ admin.initializeApp();
 // Master şifrə yalnız burada — server tərəfindədir, frontend-ə çatmır
 const REPORT_DELETE_MASTER_PASSWORD = "202420252026";
 
+function normalizeRequest(rawRequest, rawContext) {
+  let data = rawRequest;
+  let context = rawContext;
+
+  // Gen 2 check
+  if (rawRequest && typeof rawRequest === "object" && "data" in rawRequest && "auth" in rawRequest) {
+    data = rawRequest.data;
+    context = rawRequest;
+  }
+
+  return { data, context };
+}
+
 async function assertAdmin(data, context) {
-  let callerUid = context?.auth?.uid;
+  const normalized = normalizeRequest(data, context);
+  let actualData = normalized.data;
+  let actualContext = normalized.context;
+
+  let callerUid = actualContext?.auth?.uid;
 
   // Əgər context.auth işləmirsə, manual token ilə yoxla
-  if (!callerUid && data?.token) {
+  if (!callerUid && actualData?.token) {
     try {
-      const decoded = await admin.auth().verifyIdToken(data.token);
+      const decoded = await admin.auth().verifyIdToken(actualData.token);
       callerUid = decoded.uid;
     } catch (e) {
       throw new functions.https.HttpsError("unauthenticated", "Token etibarsızdır.");
@@ -35,7 +52,8 @@ async function assertAdmin(data, context) {
 }
 
 // Admin yeni user yaradır: Auth + Firestore users/{uid}
-exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
+exports.createUserByAdmin = functions.https.onCall(async (rawRequest, rawContext) => {
+  const { data, context } = normalizeRequest(rawRequest, rawContext);
   console.log("createUserByAdmin triggered. Data:", JSON.stringify({ email: data?.email, role: data?.role }));
   await assertAdmin(data, context);
 
@@ -78,7 +96,8 @@ exports.createUserByAdmin = functions.https.onCall(async (data, context) => {
 });
 
 // Admin istifadəçini silir: Auth + Firestore users/{uid}
-exports.deleteUserByAdmin = functions.https.onCall(async (data, context) => {
+exports.deleteUserByAdmin = functions.https.onCall(async (rawRequest, rawContext) => {
+  const { data, context } = normalizeRequest(rawRequest, rawContext);
   await assertAdmin(data, context);
 
   const uid = String(data?.uid || "").trim();
@@ -103,7 +122,8 @@ exports.deleteUserByAdmin = functions.https.onCall(async (data, context) => {
 });
 
 // Hesabatı master şifrə ilə silir — şifrə yalnız server tərəfindədir
-exports.deleteReportByAdmin = functions.https.onCall(async (data, context) => {
+exports.deleteReportByAdmin = functions.https.onCall(async (rawRequest, rawContext) => {
+  const { data, context } = normalizeRequest(rawRequest, rawContext);
   await assertAdmin(data, context);
 
   const reportId = String(data?.reportId || "").trim();

@@ -3,7 +3,7 @@ import { collection, getDocs, doc, updateDoc, getDoc, query, where, setDoc } fro
 import { getAuth } from "firebase/auth";
 import { httpsCallable } from "firebase/functions";
 import { db, functions } from "./firebase";
-import * as xlsx from 'xlsx';
+import * as XLSX from 'xlsx';
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -97,10 +97,10 @@ const UserManagementPage = () => {
     setIsLoading(true);
     try {
       const data = await file.arrayBuffer();
-      const workbook = xlsx.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = xlsx.utils.sheet_to_json(worksheet, { header: 1 });
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
       // A: Region, B: Ad Soyad, C: Vəzifə, D: Email, E: Şifrə
       const newUsers = jsonData.slice(1).filter(row => row[3]);
@@ -114,11 +114,17 @@ const UserManagementPage = () => {
       const existingUsersMap = new Map();
       qs.docs.forEach(doc => {
          const data = doc.data();
-         if (data.email) existingUsersMap.set(data.email.toLowerCase(), doc.id);
+         if (data.email) {
+           existingUsersMap.set(data.email.toLowerCase(), {
+             id: doc.id,
+             viewScope: data.viewScope || "own",
+             role: data.role || "mtm_user"
+           });
+         }
       });
 
       for (const row of newUsers) {
-        const assignedRegions = row[0] ? row[0].split(',').map(s => s.trim()) : [];
+        const assignedRegions = row[0] ? String(row[0]).split(',').map(s => s.trim()) : [];
         const fullName = row[1] || "";
         const position = row[2] || "";
         const email = String(row[3]).trim().toLowerCase();
@@ -127,15 +133,15 @@ const UserManagementPage = () => {
         const viewScope = "own";
 
         try {
-          const existingUid = existingUsersMap.get(email);
+          const existingUser = existingUsersMap.get(email);
 
-          if (existingUid) {
-             // İstifadəçi mövcuddur, yalnız datanı yeniləyirik
-             await setDoc(doc(db, "users", existingUid), {
+          if (existingUser) {
+             // İstifadəçi mövcuddur, yalnız datanı yeniləyirik (viewScope və role-nu qoruyuruq)
+             await setDoc(doc(db, "users", existingUser.id), {
                fullName,
                position,
                assignedRegions,
-               viewScope: viewScope // mövcudları 'own' kimi yeniləyir və ya köhnəni qoruya bilərik
+               viewScope: existingUser.viewScope
              }, { merge: true });
              updatedCount++;
           } else {
@@ -186,6 +192,7 @@ const UserManagementPage = () => {
       setIsLoading(false);
       e.target.value = '';
     }
+
   };
 
   const handleEditUserSubmit = async (e) => {
