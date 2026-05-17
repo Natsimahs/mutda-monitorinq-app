@@ -290,7 +290,7 @@ const NewMonitoringReportsPage = ({ user }) => {
             'Saat': new Date(report.gonderilmeTarixi).toLocaleTimeString('az-AZ', { hour: '2-digit', minute: '2-digit' }),
             'Monitorinq Müddəti': new Date(report.monitorinqMuddeti * 1000).toISOString().substr(11, 8),
             'GPS Ünvan': `${report.gps?.lat || ''}, ${report.gps?.lon || ''}`,
-            'Əməkdaş': report.authorEmail,
+            'Əməkdaş': getUserDisplayName(report),
             'Regional Təhsil İdarəsi': report.regionalIdare,
             'Rayon': report.rayon,
             'Müəssisə': getKindergartenNameById(report.bagcaId),
