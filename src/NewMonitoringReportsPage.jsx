@@ -67,12 +67,16 @@ const NewMonitoringReportsPage = ({ user }) => {
         setKindergartens(kgSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
 
         // İstifadəçilər xəritəsi: uid -> fullName
-        const usersSnapshot = await getDocs(collection(db, "users"));
         const map = {};
-        usersSnapshot.forEach(d => {
-          const data = d.data();
-          if (data.fullName) map[d.id] = data.fullName;
-        });
+        try {
+          const usersSnapshot = await getDocs(collection(db, "users"));
+          usersSnapshot.forEach(d => {
+            const data = d.data();
+            if (data.fullName) map[d.id] = data.fullName;
+          });
+        } catch (usersErr) {
+          console.warn("İstifadəçilər siyahısını oxumaq üçün icazə yoxdur:", usersErr);
+        }
         setUsersMap(map);
 
         // Reportlar: admin və ya viewScope === 'all' hamısını görür
