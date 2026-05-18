@@ -28,15 +28,15 @@ export const AuthProvider = ({ children }) => {
 
             if (!role) {
                 // Sənəd var, amma rol boşdur
-                setUser({ ...firebaseUser, ...userDocSnap.data(), role: 'none', email: finalEmail });
+                setUser({ uid: firebaseUser.uid, ...firebaseUser, ...userDocSnap.data(), role: 'none', email: finalEmail });
             } else {
-                setUser({ ...firebaseUser, ...userDocSnap.data(), role, email: finalEmail });
+                setUser({ uid: firebaseUser.uid, ...firebaseUser, ...userDocSnap.data(), role, email: finalEmail });
             }
           } else {
             // TƏHLÜKƏSİZLİK YAMASI: Artıq frontend özünə rol YAZMIR.
             // Əgər admin tərəfindən rol təyin edilməyibsə, istifadəçinin rolu 'none' olur
             // və o, sistemə buraxılmayacaq.
-            setUser({ ...firebaseUser, role: 'none', email: primaryEmail });
+            setUser({ uid: firebaseUser.uid, ...firebaseUser, role: 'none', email: primaryEmail });
           }
         } else {
           setUser(null);

@@ -100,16 +100,31 @@ const NewMonitoringReportsPage = ({ user }) => {
           const emailLower = emailRaw.toLowerCase();
 
           const queries = [];
-          if (uid) queries.push(getDocs(query(reportsCol, where('authorId', '==', uid))));
-          if (emailRaw) queries.push(getDocs(query(reportsCol, where('authorEmail', '==', emailRaw))));
+          if (uid) {
+            queries.push(
+              getDocs(query(reportsCol, where('authorId', '==', uid)))
+                .catch(err => { console.warn("authorId query failed:", err); return { docs: [] }; })
+            );
+          }
+          if (emailRaw) {
+            queries.push(
+              getDocs(query(reportsCol, where('authorEmail', '==', emailRaw)))
+                .catch(err => { console.warn("authorEmail query failed:", err); return { docs: [] }; })
+            );
+          }
           if (emailLower && emailLower !== emailRaw) {
-            queries.push(getDocs(query(reportsCol, where('authorEmail', '==', emailLower))));
+            queries.push(
+              getDocs(query(reportsCol, where('authorEmail', '==', emailLower)))
+                .catch(err => { console.warn("authorEmail lower query failed:", err); return { docs: [] }; })
+            );
           }
 
           const results = await Promise.all(queries);
           const merged = new Map();
           results.forEach(snap => {
-            snap.forEach(d => merged.set(d.id, { id: d.id, ...d.data() }));
+            if (snap && snap.docs) {
+              snap.docs.forEach(d => merged.set(d.id, { id: d.id, ...d.data() }));
+            }
           });
 
           setAllReports(Array.from(merged.values()));
